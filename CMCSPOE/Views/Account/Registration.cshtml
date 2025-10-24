@@ -1,0 +1,63 @@
+﻿@model ContractMonthlyClaimSystem.Models.User;
+@{
+	ViewData["Title"] = "Register";
+}
+<div class="container">
+	<h4 class="mb-3 text-center">Create an Account</h4>
+
+	@if (TempData["Message"] != null)
+	{
+		<div class="alert alert-success">@TempData["Message"]</div>
+	}
+
+		@* Show model-level validation errors *@
+	<div asp-validation-summary="All" class="text-danger mb-2"></div>
+
+	<form asp-controller="Account" asp-action="Registration" method="post">
+		@Html.AntiForgeryToken()
+
+		<div class="form-group mb-3">
+			<label asp-for="FullName"></label>
+			<input asp-for="FullName" class="form-control" placeholder="Enter your full name" />
+			<span asp-validation-for="FullName" class="text-danger"></span>
+		</div>
+
+		<div class="form-group mb-3">
+			<label asp-for="Age"></label>
+			<input asp-for="Age" class="form-control" type="number" min="18" placeholder="Enter your age" />
+			<span asp-validation-for="Age" class="text-danger"></span>
+		</div>
+
+		<div class="form-group mb-3">
+			<label asp-for="Email"></label>
+			<input asp-for="Email" class="form-control" type="email" placeholder="Enter your email" />
+			<span asp-validation-for="Email" class="text-danger"></span>
+		</div>
+
+		<div class="form-group mb-3">
+			<label asp-for="Password"></label>
+			<input asp-for="Password" class="form-control" type="password" placeholder="Create your password" />
+			<span asp-validation-for="Password" class="text-danger"></span>
+		</div>
+
+		<div class="form-group mb-3">
+			<label asp-for="Role" class="form-label">Role</label>
+			<select asp-for="Role" class="form-select">
+				<option value="" disabled selected>Select your role</option>
+				<option value="Lecturer">Lecturer</option>
+				<option value="Programme Coordinator">Programme Coordinator</option>
+				<option value="Academic Manager">Academic Manager</option>
+			</select>
+			<span asp-validation-for="Role" class="text-danger"></span>
+		</div>
+
+		<button class="btn btn-success w-100" type="submit">Register</button>
+	</form>
+
+	<p class="text-center mt-3">
+		Already have an account?
+		<a href="@Url.Action("Login", "Account")"> Login here</a>
+	</p>
+</div>
+
+@* Ensure client-side validation scripts are loaded (usually in _Layout). *@

@@ -1,0 +1,49 @@
+﻿@{
+	ViewData["Title"] = "Dashboard";
+}
+<div class="dashboard-content">
+	<h1>Dashboard</h1>
+	<p>This is your main dashboard where you can manage submissions, view analytics, and track progress.</p>
+
+	<div class="card-grid">
+		<div class="card">
+			<h2>Submit Work</h2>
+			<p>Upload and manage.</p>
+			<a asp-controller="Claim" asp-action="SubmitClaim" class="btn btn-primary">Submit Claim</a>
+		</div>
+		<div class="card">
+			<h2>Upload Documents</h2>
+			<p>Upload necessary documents for your submissions.</p>
+			<a asp-controller="Claim" asp-action="UploadDocuments" class="btn btn-secondary">Upload Documents</a>
+		</div>
+		<div class="card">
+			<h2>Track Status</h2>
+			<p>Monitor the status of your submissions.</p>
+			<a asp-controller="Claim" asp-action="TrackStatus" class="btn btn-info">Track Status</a>
+			
+		</div>
+		<div class="card">
+			<h2>Verify Claim</h2>
+			<a asp-controller="Claim" asp-action="VerifyClaim" class="btn btn-warning">Verify Claims</a>
+		</div>
+		<div class="card">
+			<h2>Approve Claims</h2>
+			<a asp-controller="Claim" asp-action="ApproveClaim" class="btn btn-success">Approve Claims</a>
+		</div>
+
+		<div class="card">
+			<h2>View Reports</h2>
+			<p>Generate and review student performance reports.</p>
+			<a asp-controller="Claim" asp-action="ViewClaims" class="btn btn-dark">View Claims</a>
+		</div>
+
+		<div class="card">
+			<h2>Lecturer Tools</h2>
+			<p>Access grading and feedback tools.</p>
+			<a asp-controller="Lecturer" asp-action="Index" class="btn btn-success">Lecture Panel</a>
+		</div>
+	</div>
+</div>
+
+
+
