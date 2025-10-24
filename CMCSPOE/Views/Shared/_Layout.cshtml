@@ -1,4 +1,8 @@
-﻿<!DOCTYPE html>
+﻿@{
+    var userRole = TempData["userRole"]?.ToString();
+    var userName = TempData["userName"]?.ToString();
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -9,34 +13,104 @@
     <link rel="stylesheet" href="~/CMCSPOE.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" asp-controller="Home" asp-action="Index">CMCS</a>
+    
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index">CMCS System</a>
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Home" asp-action="About">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Dashboard" asp-action="LecturerDashboard">Lecturer Panel</a>
+                </li>
+            </ul>
 
-            <div class="collapse navbar-collapse">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav" aria-controls="navbarNav"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    @if (Context.Session.GetString("Role") == "Lecturer")
-					{
-						<li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="LecturerDashboard">Dashboard</a></li>
-						<li class="nav-item"><a class="nav-link" asp-controller="Claim" asp-action="SubmitClaim">Submit Claim</a></li>
-						<li class="nav-item"><a class="nav-link" asp-controller="Claim" asp-action="ViewClaims">My Claims</a></li>
-					}
-                    else if (Context.Session.GetString("Role") == "Programme Coordinator" || Context.Session.GetString("Role") == "Academic Manager")
+                  
+                    @if (TempData["userName"] != null)
                     {
-                        <li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Claim" asp-action="VerifyClaims">Verify Claims</a></li>
+                        <li class="nav-item">
+                            <span class="navbar-text text-white me-3">
+                                @TempData["userName"]
+                                (@TempData["userRole"])
+                            </span>
+                        </li>
+                    }
+                        
+                    @if (userRole == "Lecturer")
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Claim" asp-action="SubmitClaim">Submit Claim</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Claim" asp-action="ViewClaims">View My Claims</a>
+                        </li>
+
+                    }
+                    else if (userRole == "Programme Coordinator")
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Claim" asp-action="VerifyClaims">Verify Claims</a>
+                        </li>
+                    }
+                    else if (userRole == "Academic Manager")
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Claim" asp-action="ApproveClaims">Approve Claims</a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
                     }
                 </ul>
+
                 <ul class="navbar-nav">
-                    @if (Context.Session.GetString("FullName") != null)
+                    @if (!string.IsNullOrEmpty(userName))
                     {
-                        <li class="nav-item text-light mt-2 me-3">Welcome, @Context.Session.GetString("FullName")</li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Logout">Logout</a></li>
+                        <li class="nav-item">
+                            <span class="nav-link text-light">Welcome, @userName!</span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-warning" asp-controller="Account" asp-action="Logout">Logout</a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Account" asp-action="Registration">Register</a>
+                        </li>
                     }
                 </ul>
             </div>
         </div>
     </nav>
+
 
 
     <div class="container">

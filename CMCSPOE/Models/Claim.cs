@@ -12,11 +12,17 @@
         public string SupportingDocuments { get; set; }
         public string Status { get; set; } // Pending, Approved, Rejected
         public string LecturerName { get; set; } // Linked to the Lecturers table
+        public decimal CalculatedAmount { get; set; }
+        public string Remarks { get; set; }
 
         public int TotalAmount
         {
             get { return (int)(HoursWorked * HourlyRate); }
         }
-
+        public decimal CalculateAmount()
+        {
+            CalculatedAmount = HoursWorked * HourlyRate;
+            return CalculatedAmount;
+        }
     }
 }

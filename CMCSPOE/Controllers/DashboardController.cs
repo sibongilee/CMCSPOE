@@ -13,7 +13,7 @@ namespace CMCSPOE.Controllers
         private readonly DatabaseConnection db = new DatabaseConnection();
         public IActionResult Index()
         {
-            string role = HttpContext.Session.GetString("Role");
+            string? role = HttpContext.Session.GetString("Role");
 
             if (role == "Lecturer")
                 return RedirectToAction("LecturerDashboard");
@@ -37,7 +37,7 @@ namespace CMCSPOE.Controllers
                             LecturerName = reader["FullName"].ToString(),
                             Month = reader["Month"].ToString(),
                             HoursWorked = (int)reader["HoursWorked"],
-                            RatePerHour = (decimal)reader["RatePerHour"],
+                            
                             Status = reader["Status"].ToString()
                         });
                     }
@@ -73,7 +73,7 @@ namespace CMCSPOE.Controllers
                         ClaimId = (int)reader["ClaimId"],
                         Month = reader["Month"].ToString(),
                         HoursWorked = (int)reader["HoursWorked"],
-                        RatePerHour = (decimal)reader["RatePerHour"],
+                        
                         Status = reader["Status"].ToString(),
                         Notes = reader["Notes"].ToString()
                     });

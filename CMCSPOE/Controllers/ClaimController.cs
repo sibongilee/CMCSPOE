@@ -3,12 +3,28 @@ using CMCSPOE.Data;
 using CMCSPOE.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Hosting;
 
 namespace CMCSPOE.Controllers
 {
     public class ClaimController : Controller
     {
         private readonly DatabaseConnection db = new DatabaseConnection();
+        private readonly IConfiguration _config;
+        private readonly IWebHostEnvironment _env;
+
+        // Add this constructor to ClaimController to match the usage in your test
+        public ClaimController(IConfiguration config, IWebHostEnvironment env)
+        {
+            _config = config;
+            _env = env;
+            // You may need to initialize 'db' or other dependencies here using config and env.
+            // Example:
+            // db = new DatabaseConnection(config.GetConnectionString("DefaultConnection"));
+            // Store env if needed: this._env = env;
+        }
+
         // Submit Claim (Lecturer)
         [HttpGet]
         public IActionResult SubmitClaim()
@@ -160,10 +176,10 @@ namespace CMCSPOE.Controllers
                     claim.ClaimId = (int)reader["ClaimId"];
                     claim.LecturerName = reader["FullName"].ToString();
                     claim.HoursWorked = (int)reader["HoursWorked"];
-                    claim.TotalAmount = (decimal)reader["TotalAmount"];
-                    claim.SupportingDocument = reader["SupportingDocument"].ToString();
+                    claim.HourlyRate = (decimal)reader["RatePerHour"];
+                    claim.SupportingDocuments = reader["SupportingDocument"].ToString();
                     claim.Remarks = reader["Remarks"].ToString();
-                    claim.ClaimStatus = reader["ClaimStatus"].ToString();
+                    claim.Status = reader["ClaimStatus"].ToString();
                 }
             }
 
@@ -190,6 +206,8 @@ namespace CMCSPOE.Controllers
         }
     }
 }
+
+
 
 
 

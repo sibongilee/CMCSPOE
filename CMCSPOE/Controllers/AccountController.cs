@@ -7,7 +7,7 @@ namespace CMCSPOE.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly DatabaseConnection db = new DatabaseConnection();
+       private string connectionString = "Server=localhost;Database=CMCSPOE;Trusted_Connection=True;";
 
         [HttpGet]
         public IActionResult Login()
@@ -18,7 +18,7 @@ namespace CMCSPOE.Controllers
         [HttpPost]
         public IActionResult Login(string email, string password)
         {
-            using (SqlConnection con = db.GetConnection())
+            using (SqlConnection con = new SqlConnection(connectionString))
             {
                 con.Open();
                 string query = "SELECT * FROM Users WHERE Email=@Email AND Password=@Password";
@@ -61,16 +61,16 @@ namespace CMCSPOE.Controllers
         {
             if (ModelState.IsValid)
             {
-                using (SqlConnection con = db.GetConnection())
+                using (SqlConnection con = new SqlConnection(connectionString))
                 {
-                    con.Open();
+                    
                     string query = "INSERT INTO Users (FullName, Email, Password, Role) VALUES (@FullName, @Email, @Password, @Role)";
                     SqlCommand cmd = new SqlCommand(query, con);
                     cmd.Parameters.AddWithValue("@FullName", user.FullName);
                     cmd.Parameters.AddWithValue("@Email", user.Email);
                     cmd.Parameters.AddWithValue("@Password", user.Password);
                     cmd.Parameters.AddWithValue("@Role", user.Role);
-                    cmd.ExecuteNonQuery();
+                   
                 }
                 return RedirectToAction("Login");
             }

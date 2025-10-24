@@ -9,5 +9,7 @@
         public string Comments { get; set; }
         public DateTime DecisionDate { get; set; }
 
+        public string SupportingDocuments { get; set; }// linked to the Claims table
+
     }
 }
