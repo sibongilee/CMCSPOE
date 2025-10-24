@@ -41,3 +41,29 @@ CREATE TABLE Approvals (
     DecisionDate DATETIME,
     FOREIGN KEY (ClaimId) REFERENCES Claims(ClaimId)
 );
+
+
+-- Add ClaimStatus if missing
+IF COL_LENGTH('Claims', 'ClaimStatus') IS NULL
+BEGIN
+    ALTER TABLE Claims
+    ADD ClaimStatus NVARCHAR(50) DEFAULT 'Pending';
+END
+GO
+
+-- Add SupportingDocument if missing
+IF COL_LENGTH('Claims', 'SupportingDocument') IS NULL
+BEGIN
+    ALTER TABLE Claims
+    ADD SupportingDocument NVARCHAR(255) NULL;
+END
+GO
+
+-- Add Remarks or Approval columns if missing
+IF COL_LENGTH('Claims', 'Remarks') IS NULL
+BEGIN
+    ALTER TABLE Claims
+    ADD Remarks NVARCHAR(255) NULL;
+END
+GO
+

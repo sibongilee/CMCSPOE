@@ -1,0 +1,49 @@
+﻿@model IEnumerable<CMCSPOE.Models.Claim>
+@{
+    ViewData["Title"] = "Approve Claims";
+}
+
+<h2>Pending Claims for Verification</h2>
+<hr />
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+
+<table class="table table-bordered table-hover">
+    <thead class="table-primary">
+        <tr>
+            <th>Claim ID</th>
+            <th>Lecturer</th>
+            <th>Hours Worked</th>
+            <th>Rate/Hour (R)</th>
+            <th>Total (R)</th>
+            <th>Remarks</th>
+            <th>Document</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var claim in Model)
+        {
+            <tr>
+                <td>@claim.ClaimId</td>
+                <td>@claim.LecturerName</td>
+                <td>@claim.HoursWorked</td>
+                <td>@claim.RatePerHour</td>
+                <td>@claim.TotalAmount</td>
+                <td>@claim.Remarks</td>
+                <td>
+                    @if (!string.IsNullOrEmpty(claim.SupportingDocument))
+                    {
+                        <a href="@claim.SupportingDocument" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>
+                    }
+                </td>
+                <td>
+                    <a asp-action="VerifyClaim" asp-route-id="@claim.ClaimId" class="btn btn-sm btn-primary">Verify</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

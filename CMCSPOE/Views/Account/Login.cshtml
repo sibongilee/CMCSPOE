@@ -1,30 +1,36 @@
-﻿@{
-    Layout = "_Layout";
+﻿@model CMCSPOE.Models.User;
+@{
+    ViewData["Title"] = "Login";
 }
 
-<h2 class="text-center text-primary mb-4">Login</h2>
+<h2>Login</h2>
+<hr />
 
-@if (ViewBag.Error != null)
-{
-    <div class="alert alert-danger text-center">@ViewBag.Error</div>
-}
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success text-center">@TempData["Success"]</div>
-}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <form asp-action="Login" method="post">
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
 
-<form asp-action="Login" method="post" class="mx-auto" style="max-width:400px;">
-    <div class="mb-3">
-        <label class="form-label">Email</label>
-        <input name="email" type="email" class="form-control" required />
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"></label>
+                <input asp-for="Password" class="form-control" type="password" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Login</button>
+
+            @if (ViewBag.Message != null)
+            {
+                <div class="alert alert-danger mt-3">@ViewBag.Message</div>
+            }
+        </form>
+
+        <div class="text-center mt-3">
+            <p>Don't have an account? <a asp-controller="Account" asp-action="Register">Register here</a></p>
+        </div>
     </div>
-    <div class="mb-3">
-        <label class="form-label">Password</label>
-        <input name="password" type="password" class="form-control" required />
-    </div>
-    <button type="submit" class="btn btn-primary w-100">Login</button>
-</form>
-
-<div class="text-center mt-3">
-    <a asp-action="Register">Register as New User</a>
 </div>

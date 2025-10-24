@@ -22,8 +22,8 @@
             <tr>
                 <td>@claim.Month</td>
                 <td>@claim.HoursWorked</td>
-                <td>R @claim.RatePerHour</td>
-                <td>R @(claim.HoursWorked* claim.RatePerHour)</td>
+                <td>R @claim.TotalAmount</td>
+                <td>R @(claim.HoursWorked* claim.TotalAmount)</td>
                 <td>@claim.Status</td>
                 <td>@claim.Notes</td>
             </tr>

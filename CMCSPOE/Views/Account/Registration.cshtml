@@ -1,44 +1,51 @@
 ﻿@model CMCSPOE.Models.User;
 @{
 	ViewData["Title"] = "Register";
-	Layout = "_Layout";
-}
-<h2 class="text-center text-primary mb-4">Register New User</h2>
-
-@if (ViewBag.Error != null)
-{
-    <div class="alert alert-danger">@ViewBag.Error</div>
-}
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">@TempData["Success"]</div>
 }
 
-<form asp-action="Register" method="post" class="mx-auto" style="max-width:500px;">
-    <div class="mb-3">
-        <label class="form-label">Full Name</label>
-        <input asp-for="FullName" class="form-control" required />
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Email</label>
-        <input asp-for="Email" type="email" class="form-control" required />
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Password</label>
-        <input asp-for="Password" type="password" class="form-control" required />
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Select Role</label>
-        <select asp-for="Role" class="form-select" required>
-            <option value="">-- Choose Role --</option>
-            <option>Lecturer</option>
-            <option>Programme Coordinator</option>
-            <option>Academic Manager</option>
-        </select>
-    </div>
-    <button type="submit" class="btn btn-success w-100">Register</button>
-</form>
+<h2>Register</h2>
+<hr />
 
-<div class="text-center mt-3">
-    <a asp-action="Login">Already have an account? Login</a>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <form asp-action="Register" method="post">
+            <div class="mb-3">
+                <label asp-for="FullName" class="form-label"></label>
+                <input asp-for="FullName" class="form-control" />
+                <span asp-validation-for="FullName" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"></label>
+                <input asp-for="Password" class="form-control" type="password" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Role" class="form-label"></label>
+                <select asp-for="Role" class="form-select">
+                    <option value="">-- Select Role --</option>
+                    <option value="Lecturer">Lecturer</option>
+                    <option value="Programme Coordinator">Programme Coordinator</option>
+                    <option value="Academic Manager">Academic Manager</option>
+                </select>
+                <span asp-validation-for="Role" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Register</button>
+
+            @if (ViewBag.Message != null)
+            {
+                <div class="alert alert-info mt-3">@ViewBag.Message</div>
+            }
+        </form>
+    </div>
 </div>
+
+

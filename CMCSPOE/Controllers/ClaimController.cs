@@ -136,21 +136,60 @@ namespace CMCSPOE.Controllers
             return View(claims);
         }
 
-        [HttpPost]
-        public IActionResult ApproveOrReject(int claimId, string decision)
+        [HttpGet]
+        public IActionResult VerifyClaim(int id)
         {
+            Claim claim = new Claim();
+
             using (SqlConnection con = db.GetConnection())
             {
                 con.Open();
-                string query = "UPDATE Claims SET Status=@Decision WHERE ClaimId=@ClaimId";
+                string query = @"SELECT c.ClaimId, u.FullName, c.HoursWorked, c.RatePerHour, 
+                                c.TotalAmount, c.ClaimStatus, c.SupportingDocument, c.Remarks
+                         FROM Claims c
+                         JOIN Lecturers l ON c.LecturerId = l.LecturerId
+                         JOIN Users u ON l.UserId = u.UserId
+                         WHERE c.ClaimId = @ClaimId";
+
                 SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@Decision", decision);
-                cmd.Parameters.AddWithValue("@ClaimId", claimId);
+                cmd.Parameters.AddWithValue("@ClaimId", id);
+
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (reader.Read())
+                {
+                    claim.ClaimId = (int)reader["ClaimId"];
+                    claim.LecturerName = reader["FullName"].ToString();
+                    claim.HoursWorked = (int)reader["HoursWorked"];
+                    claim.TotalAmount = (decimal)reader["TotalAmount"];
+                    claim.SupportingDocument = reader["SupportingDocument"].ToString();
+                    claim.Remarks = reader["Remarks"].ToString();
+                    claim.ClaimStatus = reader["ClaimStatus"].ToString();
+                }
+            }
+
+            return View(claim);
+        }
+
+        [HttpPost]
+        public IActionResult VerifyClaim(int ClaimId, string action)
+        {
+            string newStatus = action == "Approve" ? "Approved" : "Rejected";
+
+            using (SqlConnection con = db.GetConnection())
+            {
+                con.Open();
+                string updateQuery = "UPDATE Claims SET ClaimStatus = @Status WHERE ClaimId = @ClaimId";
+                SqlCommand cmd = new SqlCommand(updateQuery, con);
+                cmd.Parameters.AddWithValue("@Status", newStatus);
+                cmd.Parameters.AddWithValue("@ClaimId", ClaimId);
                 cmd.ExecuteNonQuery();
             }
 
-            return RedirectToAction("VerifyClaims");
+            TempData["Message"] = $"Claim #{ClaimId} has been {newStatus.ToLower()} successfully.";
+            return RedirectToAction("ApproveClaim");
         }
-
     }
 }
+
+
+

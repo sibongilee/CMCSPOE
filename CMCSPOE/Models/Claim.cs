@@ -9,8 +9,14 @@
         public decimal HourlyRate { get; set; }
         public string Notes { get; set; }
         public string FileName { get; set; }
-        public string FilePath { get; set; }
+        public string SupportingDocuments { get; set; }
         public string Status { get; set; } // Pending, Approved, Rejected
+        public string LecturerName { get; set; } // Linked to the Lecturers table
+
+        public int TotalAmount
+        {
+            get { return (int)(HoursWorked * HourlyRate); }
+        }
 
     }
 }

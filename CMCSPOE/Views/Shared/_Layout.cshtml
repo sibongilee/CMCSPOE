@@ -16,11 +16,11 @@
             <div class="collapse navbar-collapse">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     @if (Context.Session.GetString("Role") == "Lecturer")
-                    {
-                        <li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="LecturerDashboard">Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Claim" asp-action="SubmitClaim">Submit Claim</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Claim" asp-action="ViewClaims">My Claims</a></li>
-                    }
+					{
+						<li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="LecturerDashboard">Dashboard</a></li>
+						<li class="nav-item"><a class="nav-link" asp-controller="Claim" asp-action="SubmitClaim">Submit Claim</a></li>
+						<li class="nav-item"><a class="nav-link" asp-controller="Claim" asp-action="ViewClaims">My Claims</a></li>
+					}
                     else if (Context.Session.GetString("Role") == "Programme Coordinator" || Context.Session.GetString("Role") == "Academic Manager")
                     {
                         <li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
