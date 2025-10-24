@@ -1,5 +1,6 @@
 ﻿using System.Data.SqlClient;
 using CMCSPOE.Data;
+using CMCSPOE.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CMCSPOE.Controllers
@@ -46,6 +47,34 @@ namespace CMCSPOE.Controllers
                     return View();
                 }
             }
+        }
+        // GET: Register
+        [HttpGet]
+        public IActionResult Registration()
+        {
+            return View();
+        }
+
+        // POST: Register
+        [HttpPost]
+        public IActionResult Registration(User user)
+        {
+            if (ModelState.IsValid)
+            {
+                using (SqlConnection con = db.GetConnection())
+                {
+                    con.Open();
+                    string query = "INSERT INTO Users (FullName, Email, Password, Role) VALUES (@FullName, @Email, @Password, @Role)";
+                    SqlCommand cmd = new SqlCommand(query, con);
+                    cmd.Parameters.AddWithValue("@FullName", user.FullName);
+                    cmd.Parameters.AddWithValue("@Email", user.Email);
+                    cmd.Parameters.AddWithValue("@Password", user.Password);
+                    cmd.Parameters.AddWithValue("@Role", user.Role);
+                    cmd.ExecuteNonQuery();
+                }
+                return RedirectToAction("Login");
+            }
+            return View(user);
         }
 
         public IActionResult Logout()

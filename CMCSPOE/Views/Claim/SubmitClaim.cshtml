@@ -1,0 +1,36 @@
+﻿@model CMCSPOE.Models.Claim
+@{
+    ViewData["Title"] = "Submit Claim";
+	Layout = "_Layout";
+}
+
+<h2 class="text-center text-primary mb-4">Submit a Claim</h2>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+
+<form asp-action="SubmitClaim" method="post">
+    <div class="mb-3">
+        <label class="form-label">Month</label>
+        <input asp-for="Month" class="form-control" placeholder="e.g. October 2025" required />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Hours Worked</label>
+        <input asp-for="HoursWorked" type="number" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Rate Per Hour</label>
+        <input asp-for="RatePerHour" type="number" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Additional Notes</label>
+        <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-success w-100">Submit Claim</button>
+</form>

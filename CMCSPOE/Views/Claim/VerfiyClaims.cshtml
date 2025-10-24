@@ -1,0 +1,40 @@
+﻿@model IEnumerable<CMCSPOE.Models.Claim>
+{
+    Layout = "_Layout";
+}
+
+<h2 class="text-center text-primary mb-4">Verify Submitted Claims</h2>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Lecturer</th>
+            <th>Month</th>
+            <th>Hours</th>
+            <th>Rate</th>
+            <th>Total</th>
+            <th>Notes</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var claim in Model)
+        {
+            <tr>
+                <td>@claim.LecturerName</td>
+                <td>@claim.Month</td>
+                <td>@claim.HoursWorked</td>
+                <td>R @claim.RatePerHour</td>
+                <td>R @(claim.HoursWorked* claim.RatePerHour)</td>
+                <td>@claim.Notes</td>
+                <td>
+                    <form asp-action="Approve" method="post" style="display:inline;">
+                        <input type="hidden" name="claimId" value="@claim.ClaimId" />
+                        <button type="submit" name="actionType" value="Approve" class="btn btn-success btn-sm">Approve</button>
+                        <button type="submit" name="actionType" value="Reject" class="btn btn-danger btn-sm">Reject</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

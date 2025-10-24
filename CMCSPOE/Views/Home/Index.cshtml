@@ -1,8 +1,21 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
 }
+<div class="home-container">
+    <h1>Welcome to the Lecturer Claim Management System</h1>
+    <p class="intro-text">
+        This system was developed to help lecturers manage their claims effectively.
+        Once logged in, you can easily:
+    </p>
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <ul>
+        <li>Submit a new claim</li>
+        <li>Upload supporting documents</li>
+        <li>Track the status of submitted claims</li>
+        <li>Verify or approve claims (for admin role)</li>
+    </ul>
+    <div class="action-buttons">
+        <a asp-controller="Account" asp-action="Login" class="btn-main">Login</a>
+        <a asp-controller="Account" asp-action="Registration" class="btn-secondary">Register</a>
+    </div>
 </div>

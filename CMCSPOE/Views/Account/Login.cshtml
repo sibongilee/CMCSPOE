@@ -1,34 +1,30 @@
 ﻿@{
-	ViewData["Title"] = "Login";
+    Layout = "_Layout";
 }
-<div class="container">
-	<h4 class="mb-3 text-center">Welcome back</h4>
 
-	@if (TempData["Message"] != null)
-	{
-		<div class="alert alert-success">@TempData["Message"]</div>
-	}
+<h2 class="text-center text-primary mb-4">Login</h2>
 
-	<div asp-validation-summary="All" class="text-danger mb-2"></div>
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger text-center">@ViewBag.Error</div>
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success text-center">@TempData["Success"]</div>
+}
 
-	<form asp-controller="Account" asp-action="Login" method="post">
-		@Html.AntiForgeryToken()
+<form asp-action="Login" method="post" class="mx-auto" style="max-width:400px;">
+    <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input name="email" type="email" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input name="password" type="password" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-primary w-100">Login</button>
+</form>
 
-		<div class="form-group mb-3">
-			<label class="form-label">Email</label>
-			<input name="email" class="form-control" type="email" />
-		</div>
-
-		<div class="form-group mb-3">
-			<label class="form-label">Password</label>
-			<input type="password" name="password" class="form-control" />
-		</div>
-
-		<button type="submit" class="btn btn-custom w-100">Sign in</button>
-	</form>
-
-	<p class="text-center mt-3">
-		Dont have an account? Register Here
-		<a href="@Url.Action("Registration", "Account")">Register</a>
-	</p>
+<div class="text-center mt-3">
+    <a asp-action="Register">Register as New User</a>
 </div>

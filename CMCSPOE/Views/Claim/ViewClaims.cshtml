@@ -1,0 +1,32 @@
+﻿@model IEnumerable<CMCSPOE.Models.Claim>
+@{
+    Layout = "_Layout";
+}
+
+<h2 class="text-center text-primary mb-4">My Claims</h2>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Month</th>
+            <th>Hours</th>
+            <th>Rate</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Notes</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var claim in Model)
+        {
+            <tr>
+                <td>@claim.Month</td>
+                <td>@claim.HoursWorked</td>
+                <td>R @claim.RatePerHour</td>
+                <td>R @(claim.HoursWorked* claim.RatePerHour)</td>
+                <td>@claim.Status</td>
+                <td>@claim.Notes</td>
+            </tr>
+        }
+    </tbody>
+</table>

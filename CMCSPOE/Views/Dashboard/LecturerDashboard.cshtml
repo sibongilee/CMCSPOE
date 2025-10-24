@@ -3,13 +3,13 @@
     Layout = "_Layout";
 }
 
-<h2 class="text-center text-primary mb-4">Coordinator / Manager Dashboard</h2>
+<h2 class="text-center text-primary mb-4">Lecturer Dashboard</h2>
 
 <div class="row mb-4 text-center">
     <div class="col-md-3">
         <div class="card bg-light shadow-sm p-3">
             <h5>Total Claims</h5>
-            <h3>@Model.Count()</h3>
+            <h3>@ViewBag.TotalClaims</h3>
         </div>
     </div>
     <div class="col-md-3">
@@ -32,35 +32,32 @@
     </div>
 </div>
 
-<h4 class="text-secondary">Recent Claims</h4>
-<table class="table table-hover">
+<div class="text-end mb-3">
+    <a asp-controller="Claim" asp-action="SubmitClaim" class="btn btn-primary">Submit New Claim</a>
+</div>
+
+<table class="table table-bordered table-striped">
     <thead class="table-dark">
         <tr>
-            <th>Lecturer</th>
             <th>Month</th>
             <th>Hours</th>
+            <th>Rate</th>
             <th>Total</th>
             <th>Status</th>
+            <th>Notes</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var claim in Model.Take(10))
+        @foreach (var claim in Model)
         {
             <tr>
-                <td>@claim.LecturerName</td>
                 <td>@claim.Month</td>
                 <td>@claim.HoursWorked</td>
+                <td>R @claim.RatePerHour</td>
                 <td>R @(claim.HoursWorked* claim.RatePerHour)</td>
                 <td>@claim.Status</td>
+                <td>@claim.Notes</td>
             </tr>
         }
     </tbody>
 </table>
-
-<div class="text-end mt-3">
-    <a asp-controller="Claim" asp-action="VerifyClaims" class="btn btn-primary">Go to Claim Verification</a>
-</div>
-
-
-	
-
