@@ -34,7 +34,7 @@ namespace CMCSPOE.Controllers
                     cmd.CommandType = System.Data.CommandType.StoredProcedure;
 
                     cmd.Parameters.AddWithValue("@Email", model.Email);
-                    cmd.Parameters.AddWithValue("@Password", model.Password); // plain password now
+                    cmd.Parameters.AddWithValue("@PasswordHash", model.Password); // plain password now
 
                     SqlDataReader dr = cmd.ExecuteReader();
 
@@ -66,14 +66,8 @@ namespace CMCSPOE.Controllers
             return View();
         }
 
-        [HttpGet]
-        public IActionResult Register()
-        {
-            return View();
-        }
-
         [HttpPost]
-        public IActionResult Register(User model)
+        public IActionResult Registeration(User model)
         {
             if (!ModelState.IsValid)
             {

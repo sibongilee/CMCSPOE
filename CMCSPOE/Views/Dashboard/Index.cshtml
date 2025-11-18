@@ -1,66 +1,22 @@
-﻿@model IEnumerable<CMCSPOE.Models.Claim>
-@{
-    ViewData["Title"] = "Lecturer Dashbord";
+﻿@{
+    ViewData["Title"] = "Lecturer Dashboard";
 }
+<div class="container mt-4 p-4 bg-dark rounded shadow">
+    <h2 class="text-info">Lecturer Dashboard</h2>
 
-<h2 class="text-center text-primary mb-4">Coordinator / Manager Dashboard</h2>
+    <div class="mt-4">
+        <a class="btn btn-info w-100 mb-3" asp-controller="Claim" asp-action="SubmitClaim">
+            ➤ Submit Claim
+        </a>
 
-<div class="row mb-4 text-center">
-    <div class="col-md-3">
-        <div class="card bg-light shadow-sm p-3">
-            <h5>Total Claims</h5>
-            <h3>@Model.Count()</h3>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-warning text-dark shadow-sm p-3">
-            <h5>Pending</h5>
-            <h3>@ViewBag.Pending</h3>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-success text-white shadow-sm p-3">
-            <h5>Approved</h5>
-            <h3>@ViewBag.Approved</h3>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-danger text-white shadow-sm p-3">
-            <h5>Rejected</h5>
-            <h3>@ViewBag.Rejected</h3>
-        </div>
+        <a class="btn btn-secondary w-100 mb-3" asp-controller="Claim" asp-action="ViewClaims">
+            ➤ View My Claims
+        </a>
+
+        <a class="btn btn-light w-100" asp-controller="Claim" asp-action="UploadDocuments">
+            ➤ Upload Supporting Documents
+        </a>
     </div>
 </div>
-
-<h4 class="text-secondary">Recent Claims</h4>
-<table class="table table-hover">
-    <thead class="table-dark">
-        <tr>
-            <th>Lecturer</th>
-            <th>Month</th>
-            <th>Hours</th>
-            <th>Total</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var claim in Model.Take(10))
-        {
-            <tr>
-                <td>@claim.LecturerName</td>
-                <td>@claim.HourlyRate</td>
-                <td>@claim.HoursWorked</td>
-                <td>R @(claim.HoursWorked* claim.HourlyRate)</td>
-                <td>@claim.Status</td>
-            </tr>
-        }
-    </tbody>
-</table>
-
-<div class="text-end mt-3">
-    <a asp-controller="Claim" asp-action="VerifyClaims" class="btn btn-primary">Go to Claim Verification</a>
-</div>
-
-
 	
 

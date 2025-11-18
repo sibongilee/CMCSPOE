@@ -1,0 +1,31 @@
+﻿@model IEnumerable<CMCSPOE.Models.Lecturers>
+{
+    ViewData["Title"] = "Lecturer List";
+}
+
+<div class="container mt-4 p-3 bg-dark rounded shadow">
+    <h3 class="text-info">Lecturer List</h3>
+
+    <table class="table table-dark table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Rate</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var l in Model)
+            {
+                <tr>
+                    <td>@l.LecturerId</td>
+                    <td>@l.FullName</td>
+                    <td>@l.Department</td>
+                    <td>@l.HourlyRate</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
