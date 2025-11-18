@@ -48,9 +48,9 @@
         {
             <tr>
                 <td>@claim.LecturerName</td>
-                <td>@claim.Month</td>
+                <td>@claim.HourlyRate</td>
                 <td>@claim.HoursWorked</td>
-                <td>R @(claim.HoursWorked* claim.TotalAmount)</td>
+                <td>R @(claim.HoursWorked* claim.HourlyRate)</td>
                 <td>@claim.Status</td>
             </tr>
         }

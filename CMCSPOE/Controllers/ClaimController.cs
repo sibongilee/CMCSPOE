@@ -11,77 +11,106 @@ namespace CMCSPOE.Controllers
     public class ClaimController : Controller
     {
         private readonly DatabaseConnection db = new DatabaseConnection();
-        private readonly IConfiguration _config;
         private readonly IWebHostEnvironment _env;
-
-        // Add this constructor to ClaimController to match the usage in your test
-        public ClaimController(IConfiguration config, IWebHostEnvironment env)
+        public ClaimController(IWebHostEnvironment env)
         {
-            _config = config;
             _env = env;
-            // You may need to initialize 'db' or other dependencies here using config and env.
-            // Example:
-            // db = new DatabaseConnection(config.GetConnectionString("DefaultConnection"));
-            // Store env if needed: this._env = env;
         }
 
         // Submit Claim (Lecturer)
         [HttpGet]
         public IActionResult SubmitClaim()
         {
-            if (HttpContext.Session.GetString("Role") != "Lecturer")
-                return RedirectToAction("Index", "Dashboard");
-
             return View();
         }
 
         [HttpPost]
-        public IActionResult SubmitClaim(Claim claim, IFormFile Document)// IFormFile for file upload
+        public IActionResult SubmitClaim(Claim claim)
         {
-            int? lecturerId = HttpContext.Session.GetInt32("LecturerId");
-            if (lecturerId == null)
+            try
             {
-                ViewBag.Message = "Error: Lecturer not found in session.";
+                using (SqlConnection conn = db.GetConnection())
+                {
+                    conn.Open();
+                    string sql = @"INSERT INTO Claims 
+                    (LecturerId, HoursWorked, HourlyRate, Notes, Status, DateSubmitted)
+                    VALUES (@LecturerId, @HoursWorked, @HourlyRate, @Notes, 'Pending', GETDATE())";
+
+                    using (SqlCommand cmd = new SqlCommand(sql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@LecturerId", claim.LecturerId);
+                        cmd.Parameters.AddWithValue("@HoursWorked", claim.HoursWorked);
+                        cmd.Parameters.AddWithValue("@HourlyRate", claim.HourlyRate);
+                        cmd.Parameters.AddWithValue("@Notes", claim.Notes ?? "");
+
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                TempData["Success"] = "Claim submitted successfully!";
+                return RedirectToAction("ViewClaims");
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error submitting claim: " + ex.Message;
+                return View();
+            }
+        }
+
+        [HttpGet]
+        public IActionResult UploadDocuments(int id)
+        {
+            ViewBag.ClaimId = id;
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult UploadDocuments(int claimId, IFormFile document)
+        {
+            if (document == null)
+            {
+                TempData["Error"] = "Please select a file.";
                 return View();
             }
 
-            string fileName = "";
-            string filePath = "";
-
-            if (Document != null && Document.Length > 0)
+            try
             {
-                string uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-                if (!Directory.Exists(uploadFolder))
-                    Directory.CreateDirectory(uploadFolder);
+                // folder
+                string folder = Path.Combine(_env.WebRootPath, "uploads");
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
-                fileName = Path.GetFileName(Document.FileName);
-                filePath = Path.Combine(uploadFolder, fileName);
+                string filePath = Path.Combine(folder, document.FileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    Document.CopyTo(stream);
+                    document.CopyTo(stream);
                 }
-            }
 
-            using (SqlConnection con = db.GetConnection())
+                // save file name to DB
+                using (SqlConnection con = db.GetConnection())
+                {
+                    con.Open();
+                    string sql = "UPDATE Claims SET DocumentPath=@Document WHERE ClaimId=@ClaimId";
+
+                    using (SqlCommand cmd = new SqlCommand(sql, con))
+                    {
+                        cmd.Parameters.AddWithValue("@Document", document.FileName);
+                        cmd.Parameters.AddWithValue("@ClaimId", claimId);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                TempData["Success"] = "Document uploaded successfully!";
+                return RedirectToAction("ViewClaims");
+            }
+            catch (Exception ex)
             {
-                con.Open();
-                string query = @"INSERT INTO Claims (LecturerId, Month, HoursWorked, HourlyRate, Notes, FileName, FilePath, Status)
-                                 VALUES (@LecturerId, @Month, @HoursWorked, @HourlyRate, @Notes, @FileName, @FilePath, 'Pending')";
-                SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@LecturerId", lecturerId);
-                cmd.Parameters.AddWithValue("@Month", claim.Month);
-                cmd.Parameters.AddWithValue("@HoursWorked", claim.HoursWorked);
-                cmd.Parameters.AddWithValue("@HourlyRate", claim.HourlyRate);
-                cmd.Parameters.AddWithValue("@Notes", claim.Notes ?? "");
-                cmd.Parameters.AddWithValue("@FileName", fileName);
-                cmd.Parameters.AddWithValue("@FilePath", filePath);
-                cmd.ExecuteNonQuery();
+                TempData["Error"] = "Error uploading file: " + ex.Message;
+                return View();
             }
-
-            TempData["Message"] = "Claim submitted successfully!";
-            return RedirectToAction("ViewMyClaims");
         }
+
 
         // View My Claims (Lecturer)
         public IActionResult ViewMyClaims()
@@ -105,12 +134,11 @@ namespace CMCSPOE.Controllers
                     {
                         ClaimId = (int)reader["ClaimId"],
                         LecturerId = (int)reader["LecturerId"],
-                        Month = reader["Month"].ToString(),
-                        HoursWorked = (decimal)reader["HoursWorked"],
+                        HoursWorked = (int)reader["HoursWorked"],
                         HourlyRate = (decimal)reader["HourlyRate"],
                         Notes = reader["Notes"].ToString(),
                         Status = reader["Status"].ToString(),
-                        FileName = reader["FileName"].ToString()
+                
                     });
                 }
             }
@@ -139,12 +167,11 @@ namespace CMCSPOE.Controllers
                     {
                         ClaimId = (int)reader["ClaimId"],
                         LecturerId = (int)reader["LecturerId"],
-                        Month = reader["Month"].ToString(),
-                        HoursWorked = (decimal)reader["HoursWorked"],
+                        HoursWorked = (int)reader["HoursWorked"],
                         HourlyRate = (decimal)reader["HourlyRate"],
                         Notes = reader["Notes"].ToString(),
                         Status = reader["Status"].ToString(),
-                        FileName = reader["FileName"].ToString()
+                       
                     });
                 }
             }
@@ -174,11 +201,9 @@ namespace CMCSPOE.Controllers
                 if (reader.Read())
                 {
                     claim.ClaimId = (int)reader["ClaimId"];
-                    claim.LecturerName = reader["FullName"].ToString();
                     claim.HoursWorked = (int)reader["HoursWorked"];
                     claim.HourlyRate = (decimal)reader["RatePerHour"];
-                    claim.SupportingDocuments = reader["SupportingDocument"].ToString();
-                    claim.Remarks = reader["Remarks"].ToString();
+                    claim.DocumentPath = reader["SupportingDocument"].ToString();
                     claim.Status = reader["ClaimStatus"].ToString();
                 }
             }

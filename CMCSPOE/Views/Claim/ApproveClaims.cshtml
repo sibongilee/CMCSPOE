@@ -29,15 +29,11 @@
         {
             <tr>
                 <td>@claim.ClaimId</td>
-                <td>@claim.LecturerName</td>
                 <td>@claim.HoursWorked</td>
-                
-                <td>@claim.TotalAmount</td>
-                <td>@claim.Remarks</td>
                 <td>
-                    @if (!string.IsNullOrEmpty(claim.SupportingDocuments))
+                    @if (!string.IsNullOrEmpty(claim.DocumentPath))
                     {
-                        <a href="@claim.SupportingDocuments" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>
+                        <a href="@claim.DocumentPath" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>
                     }
                 </td>
                 <td>

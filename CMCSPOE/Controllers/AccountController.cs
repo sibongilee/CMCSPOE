@@ -7,7 +7,7 @@ namespace CMCSPOE.Controllers
 {
     public class AccountController : Controller
     {
-       private string connectionString = "Server=localhost;Database=CMCSPOE;Trusted_Connection=True;";
+        private readonly DatabaseConnection db = new DatabaseConnection();
 
         [HttpGet]
         public IActionResult Login()
@@ -16,66 +16,98 @@ namespace CMCSPOE.Controllers
         }
 
         [HttpPost]
-        public IActionResult Login(string email, string password)
+        public IActionResult Login(User model)
         {
-            using (SqlConnection con = new SqlConnection(connectionString))
+            if (!ModelState.IsValid)
             {
-                con.Open();
-                string query = "SELECT * FROM Users WHERE Email=@Email AND Password=@Password";
-                SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@Email", email);
-                cmd.Parameters.AddWithValue("@Password", password);
-                SqlDataReader reader = cmd.ExecuteReader();
+                ViewBag.Error = "Please fill all fields.";
+                return View(model);
+            }
 
-                if (reader.Read())
+            try
+            {
+                using (SqlConnection con = db.GetConnection())
                 {
-                    HttpContext.Session.SetInt32("UserId", (int)reader["UserId"]);
-                    HttpContext.Session.SetString("FullName", reader["FullName"].ToString());
-                    HttpContext.Session.SetString("Role", reader["Role"].ToString());
+                    con.Open();
 
-                    // Save LecturerId only for lecturer accounts
-                    if (reader["Role"].ToString() == "Lecturer" && reader["LecturerId"] != DBNull.Value)
+                    SqlCommand cmd = new SqlCommand("sp_LoginUser", con);
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@Email", model.Email);
+                    cmd.Parameters.AddWithValue("@Password", model.Password); // plain password now
+
+                    SqlDataReader dr = cmd.ExecuteReader();
+
+                    if (dr.Read())
                     {
-                        HttpContext.Session.SetInt32("LecturerId", (int)reader["LecturerId"]);
-                    }
+                        TempData["User_Id"] = dr["UserId"].ToString();
+                        TempData["User_Name"] = dr["FullName"].ToString();
+                        TempData["User_Role"] = dr["Role"].ToString();
 
-                    return RedirectToAction("Index", "Dashboard");
-                }
-                else
-                {
-                    ViewBag.Message = "Invalid email or password.";
-                    return View();
+                        return RedirectToAction("Index", "Dashboard");
+                    }
+                    else
+                    {
+                        ViewBag.Error = "Invalid email or password.";
+                        return View(model);
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                ViewBag.Error = "Login failed: " + ex.Message;
+                return View(model);
+            }
         }
-        // GET: Register
+
         [HttpGet]
         public IActionResult Registration()
         {
             return View();
         }
 
-        // POST: Register
-        [HttpPost]
-        public IActionResult Registration(User user)
+        [HttpGet]
+        public IActionResult Register()
         {
-            if (ModelState.IsValid)
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult Register(User model)
+        {
+            if (!ModelState.IsValid)
             {
-                using (SqlConnection con = new SqlConnection(connectionString))
+                ViewBag.Error = "Please complete all fields.";
+                return View(model);
+            }
+
+            try
+            {
+                using (SqlConnection con = db.GetConnection())
                 {
-                    
-                    string query = "INSERT INTO Users (FullName, Email, Password, Role) VALUES (@FullName, @Email, @Password, @Role)";
-                    SqlCommand cmd = new SqlCommand(query, con);
-                    cmd.Parameters.AddWithValue("@FullName", user.FullName);
-                    cmd.Parameters.AddWithValue("@Email", user.Email);
-                    cmd.Parameters.AddWithValue("@Password", user.Password);
-                    cmd.Parameters.AddWithValue("@Role", user.Role);
-                   
+                    con.Open();
+
+                    SqlCommand cmd = new SqlCommand("sp_RegisterUser", con);
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@FullName", model.FullName);
+                    cmd.Parameters.AddWithValue("@Email", model.Email);
+                    cmd.Parameters.AddWithValue("@PasswordHash", model.Password);
+                    cmd.Parameters.AddWithValue("@Role", model.Role);
+
+                    cmd.ExecuteNonQuery();
                 }
+
+                TempData["Success"] = "Registration successful. Please log in.";
                 return RedirectToAction("Login");
             }
-            return View(user);
+            catch (Exception ex)
+            {
+                ViewBag.Error = "Registration failed: " + ex.Message;
+                return View(model);
+            }
         }
+
 
         public IActionResult Logout()
         {

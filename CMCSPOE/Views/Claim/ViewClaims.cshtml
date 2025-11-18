@@ -1,31 +1,51 @@
-﻿@model IEnumerable<CMCSPOE.Models.Claim>
+﻿@model List<CMCSPOE.Models.Claim>
+
 @{
-    ViewData["Title"] = "View Claims";
+    ViewData["Title"] = "My Claims";
 }
 
-<h2 class="text-center text-primary mb-4">My Claims</h2>
+<h3 class="text-white fw-bold mb-3">My Submitted Claims</h3>
 
-<table class="table table-bordered table-striped">
-    <thead class="table-dark">
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<table class="table table-dark table-striped table-bordered shadow">
+    <thead>
         <tr>
-            <th>Month</th>
+            <th>Claim ID</th>
             <th>Hours</th>
             <th>Rate</th>
-            <th>Total</th>
             <th>Status</th>
-            <th>Notes</th>
+            <th>Document</th>
+            <th>Actions</th>
         </tr>
     </thead>
+
     <tbody>
         @foreach (var claim in Model)
         {
             <tr>
-                <td>@claim.Month</td>
+                <td>@claim.ClaimId</td>
                 <td>@claim.HoursWorked</td>
-                <td>R @claim.TotalAmount</td>
-                <td>R @(claim.HoursWorked* claim.TotalAmount)</td>
-                <td>@claim.Status</td>
-                <td>@claim.Notes</td>
+                <td>R @claim.HourlyRate</td>
+                <td>
+                    <span class="badge bg-info">@claim.Status</span>
+                </td>
+                <td>
+                    @if (!string.IsNullOrEmpty(claim.DocumentPath))
+                    {
+                        <a href="~/uploads/@claim.DocumentPath" class="btn btn-sm btn-outline-light">View File</a>
+                    }
+                </td>
+                <td>
+                    <a asp-action="UploadDocuments" asp-route-id="@claim.ClaimId" class="btn btn-sm btn-light">Upload Document</a>
+                </td>
             </tr>
         }
     </tbody>

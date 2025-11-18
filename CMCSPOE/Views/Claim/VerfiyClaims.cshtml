@@ -1,6 +1,6 @@
 ﻿@model IEnumerable<CMCSPOE.Models.Claim>
 {
-    View
+    ViewData["Title"] = "Verify Claims";
 }
 
 <h2 class="text-center text-primary mb-4">Verify Submitted Claims</h2>
@@ -9,9 +9,7 @@
     <thead class="table-dark">
         <tr>
             <th>Lecturer</th>
-            <th>Month</th>
             <th>Hours</th>
-            <th>Rate</th>
             <th>Total</th>
             <th>Notes</th>
             <th>Action</th>
@@ -21,10 +19,10 @@
         @foreach (var claim in Model)
         {
             <tr>
-                <td>@claim.LecturerName</td>
-                <td>@claim.Month</td>
+                <td>@claim.LecturerId</td>
                 <td>@claim.HoursWorked</td>
-                <td>R @claim.TotalAmount</td>
+                <td>R @claim.HourlyRate</td>
+                <td>R @(claim.HoursWorked * claim.HourlyRate)</td>
                 <td>@claim.Notes</td>
                 <td>
                     <form asp-action="Approve" method="post" style="display:inline;">

@@ -39,7 +39,6 @@
 <table class="table table-bordered table-striped">
     <thead class="table-dark">
         <tr>
-            <th>Month</th>
             <th>Hours</th>
             <th>Rate</th>
             <th>Total</th>
@@ -51,10 +50,9 @@
         @foreach (var claim in Model)
         {
             <tr>
-                <td>@claim.Month</td>
                 <td>@claim.HoursWorked</td>
-                <td>R @claim.TotalAmount</td>
-                <td>R @(claim.HoursWorked* claim.TotalAmount)</td>
+                <td>R @claim.HourlyRate</td>
+                <td>R @(claim.HoursWorked* claim.HourlyRate)</td>
                 <td>@claim.Status</td>
                 <td>@claim.Notes</td>
             </tr>

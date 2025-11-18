@@ -3,15 +3,25 @@ namespace CMCSPOE.Data
 {
     public class DatabaseConnection
     {
-        // connection string to connect to the SQL Server database
-        private static string connectionString =
-            "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=CMCSPOE;Integrated Security=True;";
-        // method to get a sql connection instance
+        private static string connectionString = "Server=localhost;Database=master;Trusted_Connection=True;";
         public SqlConnection GetConnection()
         {
-            SqlConnection connection = new SqlConnection(connectionString);
-            return connection;
+            return new SqlConnection(connectionString);
+        }
+        public bool TestConnection()
+        {
+            try
+            {
+                using (var connection = GetConnection())
+                {
+                    connection.Open();
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }
-

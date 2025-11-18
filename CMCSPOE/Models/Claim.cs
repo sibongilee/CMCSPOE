@@ -1,28 +1,26 @@
-﻿namespace CMCSPOE.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace CMCSPOE.Models
 {
     public class Claim
     {
         public int ClaimId { get; set; }
+        [Required]
         public int LecturerId { get; set; }
-        public string Month { get; set; }
-        public decimal HoursWorked { get; set; }
+        [Required]
+        [Range(1, 300)]
+        public int HoursWorked { get; set; }
+        [Required]
+        [Range(50, 500)]
         public decimal HourlyRate { get; set; }
         public string Notes { get; set; }
-        public string FileName { get; set; }
-        public string SupportingDocuments { get; set; }
-        public string Status { get; set; } // Pending, Approved, Rejected
-        public string LecturerName { get; set; } // Linked to the Lecturers table
-        public decimal CalculatedAmount { get; set; }
-        public string Remarks { get; set; }
 
-        public int TotalAmount
-        {
-            get { return (int)(HoursWorked * HourlyRate); }
-        }
-        public decimal CalculateAmount()
-        {
-            CalculatedAmount = HoursWorked * HourlyRate;
-            return CalculatedAmount;
-        }
+        public string? DocumentPath { get; set; }
+        public string Status { get; set; } = "Pending"; // Pending, Approved, Rejected
+        public string LecturerName { get; set; }
     }
 }
+
+  
+
+   
