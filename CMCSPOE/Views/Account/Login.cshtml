@@ -1,14 +1,15 @@
 ﻿@model CMCSPOE.Models.User;
 @{
-    ViewData["Title"] = "Login";
+	ViewData["BodyClass"] = "login-page"; 
+	ViewData["Title"] = "Login";
 }
 
 <h2>Login</h2>
 <hr />
 
-<div class="row justify-content-center">
-    <div class="col-md-5">
-        <form asp-action="Login" method="post">
+<div class="d-flex justify-content-center">
+    <div class="login-card">
+        <form asp-action="Login" method="post" class="login-form">
             <div class="mb-3">
                 <label asp-for="Email" class="form-label"></label>
                 <input asp-for="Email" class="form-control" />
@@ -16,12 +17,12 @@
             </div>
 
             <div class="mb-3">
-                <label asp-for="Password" class="form-label"></label>
-                <input asp-for="Password" class="form-control" type="password" />
-                <span asp-validation-for="Password" class="text-danger"></span>
+                <label asp-for="PasswordHash" class="form-label"></label>
+                <input asp-for="PasswordHash" class="form-control" type="password" />
+                <span asp-validation-for="PasswordHash" class="text-danger"></span>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100">Login</button>
+            <button type="submit" class="btn btn-login w-100">Login</button>
 
             @if (ViewBag.Message != null)
             {
@@ -29,8 +30,10 @@
             }
         </form>
 
-        <div class="text-center mt-3">
-            <p>Don't have an account? <a asp-controller="Account" asp-action="Register">Register here</a></p>
+        <div class="text-center mt-3 register-note">
+            <p>Don't have an account? 
+                <a asp-controller="Account" asp-action="Registration">Register here</a>
+            </p>
         </div>
     </div>
 </div>

@@ -5,9 +5,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CMCSPOE.Controllers
 {
+    [AllowAnonymous]
     public class ClaimController : Controller
     {
         private readonly DatabaseConnection db = new DatabaseConnection();

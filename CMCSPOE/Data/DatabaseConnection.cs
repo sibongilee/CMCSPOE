@@ -5,7 +5,8 @@ namespace CMCSPOE.Data
     public class DatabaseConnection
     {
         // Corrected the typo "Intial" -> "Initial"
-        private static readonly string connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=CMCSPOE;Integrated Security=True;";
+        private static readonly string connectionString = 
+            "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=CMCSPOE;Integrated Security=True;";
 
         /// <summary>
         /// Returns a new SqlConnection configured with the project's connection string.

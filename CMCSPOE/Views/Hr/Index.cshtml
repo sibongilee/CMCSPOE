@@ -1,0 +1,33 @@
+﻿@model List<CMCSPOE.Models.HrReport>
+{
+	ViewData["Title"] = "HR Reports";
+}
+<h2 class="mb-4">HR Approved Claims Summary</h2>
+<a class="btn btn-primary mb-3" asp-action="DownloadReport(CSV)"></a>
+
+<table class="table table-dark table-striped table-bordered shadow">
+	<thead>
+		<tr>
+			<th>Claim ID</th>
+			<th>Lecturer ID</th>
+			<th>Hours Worked</th>
+			<th>Hourly Rate</th>
+			<th>Total Amount</th>
+			<th>Approved On</th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var report in Model)
+		{
+			<tr>
+				<td>@report.ClaimId</td>
+				<td>@report.LecturerName</td>
+				<td>@report.HoursWorked</td>
+				<td>R @report.HourlyRate</td>
+				<td>R @(report.HoursWorked * report.HourlyRate)</td>
+				<td>@report.ApprovedDate.ToString("yyyy-MM-dd")</td>
+				<td>@report.ApprovedDate.ToString("yyyy-MM-dd")</td>
+			</tr>
+		}
+	</tbody>
+</table>

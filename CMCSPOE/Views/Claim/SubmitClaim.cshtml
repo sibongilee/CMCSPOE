@@ -42,3 +42,16 @@
         </form>
     </div>
 </div>
+<script>
+	const hours = document.getElementById("HoursWorked");
+	const rate = document.getElementById("HourlyRate");
+	const total = document.getElementById("TotalAmount");
+
+    function calculate(){
+		let hrs = parseFloat(hours.value) || 0;
+		let rt = parseFloat(rate.value) || 0;
+		total.value = (hrs * rt).toFixed(2);
+	}
+	hours.addEventListener("input", calculate);
+	rate.addEventListener("input", calculate);
+</script>

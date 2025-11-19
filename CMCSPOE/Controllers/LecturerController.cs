@@ -1,10 +1,12 @@
 ﻿using System.Data.SqlClient;
 using CMCSPOE.Data;
 using CMCSPOE.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CMCSPOE.Controllers
 {
+    [AllowAnonymous]
     public class LecturerController : Controller
     {
         private readonly DatabaseConnection db = new DatabaseConnection();

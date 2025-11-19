@@ -2,6 +2,7 @@
 using CMCSPOE.Data;
 using CMCSPOE.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace CMCSPOE.Controllers
 {
@@ -16,12 +17,12 @@ namespace CMCSPOE.Controllers
         }
 
         [HttpPost]
-        public IActionResult Login(User model)
+        public IActionResult Login(string email, string password)
         {
             if (!ModelState.IsValid)
             {
                 ViewBag.Error = "Please fill all fields.";
-                return View(model);
+                return View();
             }
 
             try
@@ -29,34 +30,43 @@ namespace CMCSPOE.Controllers
                 using (SqlConnection con = db.GetConnection())
                 {
                     con.Open();
-
-                    SqlCommand cmd = new SqlCommand("sp_LoginUser", con);
-                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
-
-                    cmd.Parameters.AddWithValue("@Email", model.Email);
-                    cmd.Parameters.AddWithValue("@PasswordHash", model.Password); // plain password now
-
-                    SqlDataReader dr = cmd.ExecuteReader();
-
-                    if (dr.Read())
+                    string query = "SELECT UserId, FullName, Role FROM Users WHERE Email = @Email AND PasswordHash = @PasswordHash";
+                    using (SqlCommand cmd = new SqlCommand(query, con))
                     {
-                        TempData["User_Id"] = dr["UserId"].ToString();
-                        TempData["User_Name"] = dr["FullName"].ToString();
-                        TempData["User_Role"] = dr["Role"].ToString();
+                        cmd.Parameters.AddWithValue("@Email", email);
+                        cmd.Parameters.AddWithValue("@PasswordHash", password);
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                int userId = reader["UserId"] != DBNull.Value ? Convert.ToInt32(reader["UserId"]) : 0;
+                                string fullName = reader["FullName"]?.ToString() ?? "";
+                                string role = reader["Role"]?.ToString() ?? "";
 
-                        return RedirectToAction("Index", "Dashboard");
-                    }
-                    else
-                    {
-                        ViewBag.Error = "Invalid email or password.";
-                        return View(model);
+                                // Persist into session so DashboardController can read them
+                                HttpContext.Session.SetInt32("UserId", userId);
+                                HttpContext.Session.SetString("UserName", fullName);
+                                HttpContext.Session.SetString("Role", role);
+
+                                // Optionally keep TempData for one-time messages
+                                TempData["UserName"] = fullName;
+                                TempData["UserRole"] = role;
+
+                                return RedirectToAction("Index", "Dashboard");
+                            }
+                            else
+                            {
+                                ViewBag.Error = "Invalid email or password.";
+                                return View();
+                            }
+                        }
                     }
                 }
             }
             catch (Exception ex)
             {
                 ViewBag.Error = "Login failed: " + ex.Message;
-                return View(model);
+                return View();
             }
         }
 
@@ -67,7 +77,7 @@ namespace CMCSPOE.Controllers
         }
 
         [HttpPost]
-        public IActionResult Registeration(User model)
+        public IActionResult Registration(User model)
         {
             if (!ModelState.IsValid)
             {
@@ -86,7 +96,7 @@ namespace CMCSPOE.Controllers
 
                     cmd.Parameters.AddWithValue("@FullName", model.FullName);
                     cmd.Parameters.AddWithValue("@Email", model.Email);
-                    cmd.Parameters.AddWithValue("@PasswordHash", model.Password);
+                    cmd.Parameters.AddWithValue("@PasswordHash", model.PasswordHash);
                     cmd.Parameters.AddWithValue("@Role", model.Role);
 
                     cmd.ExecuteNonQuery();

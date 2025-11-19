@@ -1,4 +1,47 @@
-/* Home Page */
+/* ============================= */
+/* Global Page Settings */
+/* ============================= */
+
+body {
+    background-color: #f8fafc;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding-bottom: 60px; /* prevents footer overlap */
+}
+
+/* ============================= */
+/* NAVIGATION BAR – MATCHES _Layout.cshtml */
+/* ============================= */
+
+.navbar-custom {
+    background-color: #003366 !important;
+    padding: 12px 20px;
+}
+
+    .navbar-custom .navbar-brand {
+        font-weight: bold;
+        color: #fff !important;
+        letter-spacing: 1px;
+    }
+
+    .navbar-custom .nav-link {
+        color: #e6e6e6 !important;
+    }
+
+        .navbar-custom .nav-link:hover {
+            color: #ffd700 !important;
+        }
+
+/* Username display */
+.username-display {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+/* ============================= */
+/* HOME PAGE */
+/* ============================= */
+
 .home-container {
     max-width: 700px;
     margin: 80px auto;
@@ -39,44 +82,21 @@
     .btn-main:hover {
         background-color: #0056b3;
     }
-body {
-    background-color: #f8fafc;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    padding: 0;
-}
 
-/* --- Navigation Bar --- */
-.navbar {
-    background-color: #003366;
-    color: white;
-    padding: 10px 20px;
-}
+/* ============================= */
+/* HEADINGS */
+/* ============================= */
 
-.navbar-brand {
-    font-weight: bold;
-    color: white !important;
-    letter-spacing: 1px;
-}
-
-.nav-link {
-    color: #e6e6e6 !important;
-    margin: 0 10px;
-}
-
-    .nav-link:hover {
-        color: #ffffff !important;
-        text-decoration: underline;
-    }
-
-/* --- Page Headings --- */
 h2, h3 {
     color: #003366;
     text-align: center;
     margin-bottom: 20px;
 }
 
-/* --- Form Styles --- */
+/* ============================= */
+/* FORMS */
+/* ============================= */
+
 form {
     background-color: #ffffff;
     padding: 25px;
@@ -84,18 +104,23 @@ form {
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
 
-input.form-control, select.form-select, textarea.form-control {
+input.form-control,
+select.form-select,
+textarea.form-control {
     border-radius: 8px;
     border: 1px solid #cdd2d8;
     padding: 10px;
 }
 
-    input.form-control:focus, select.form-select:focus, textarea.form-control:focus {
+    input.form-control:focus,
+    select.form-select:focus,
+    textarea.form-control:focus {
         border-color: #003366;
         box-shadow: 0 0 5px rgba(0, 51, 102, 0.3);
     }
 
-/* --- Buttons --- */
+/* BUTTONS */
+
 button, .btn {
     border-radius: 8px !important;
     padding: 10px 15px !important;
@@ -117,7 +142,10 @@ button, .btn {
     border: none;
 }
 
-/* --- Dashboard Cards --- */
+/* ============================= */
+/* DASHBOARD */
+/* ============================= */
+
 .dashboard-container {
     display: flex;
     justify-content: center;
@@ -146,24 +174,32 @@ button, .btn {
         font-weight: bold;
     }
 
-/* --- Alerts --- */
+/* ============================= */
+/* ALERT BOXES */
+/* ============================= */
+
 .alert {
     border-radius: 8px;
     font-size: 0.95em;
 }
 
-/* --- Footer --- */
+/* ============================= */
+/* FOOTER */
+/* ============================= */
+
 footer {
     background-color: #003366;
     color: white;
     text-align: center;
-    padding: 10px 0;
+    padding: 14px 0;
     position: fixed;
     width: 100%;
     bottom: 0;
+    font-size: 0.9rem;
 }
+
 /* ============================= */
-/* Login / Register Page Styling */
+/* LOGIN / REGISTER PAGE */
 /* ============================= */
 
 body.login-page {
@@ -171,107 +207,52 @@ body.login-page {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: #0b0f18; /* dark background */
-    font-family: Arial, sans-serif;
+    background: #0b0f18;
     margin: 0;
-    color: #f1f1f1;
+    padding: 0;
 }
 
 .login-card {
     background: #1a1f2b;
-    width: 420px; /* roughly same as screenshot */
+    width: 420px;
     max-width: 90%;
     padding: 35px 30px;
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    text-align: left;
 }
 
     .login-card h1 {
-        font-size: 1.8rem;
-        font-weight: bold;
-        margin-bottom: 10px;
-        color: #ffffff;
+        color: #fff;
     }
 
     .login-card p {
-        font-size: 0.95rem;
         color: #bbb;
-        margin-bottom: 25px;
     }
 
-.login-form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+.login-form label {
+    color: #ccc;
 }
 
-    .login-form label {
-        font-size: 0.9rem;
-        color: #ccc;
-    }
+.login-form input,
+.login-form select {
+    background: #10141e;
+    border: 1px solid #333;
+    color: #eee;
+}
 
-    .login-form input,
-    .login-form select {
-        padding: 12px;
-        border-radius: 8px;
-        border: 1px solid #333;
-        background: #10141e;
-        color: #eee;
-        font-size: 0.95rem;
-        outline: none;
-        transition: border 0.3s;
+    .login-form input:focus {
+        border-color: #1abc9c;
     }
-
-        .login-form input:focus,
-        .login-form select:focus {
-            border-color: #1abc9c;
-        }
 
 .btn-login {
     background: #1abc9c;
-    color: white;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    width: 100%;
 }
 
     .btn-login:hover {
         background: #16a085;
     }
 
-.extra-links {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 10px;
-    font-size: 0.85rem;
+.extra-links a,
+.register-note a {
+    color: #1abc9c;
 }
-
-    .extra-links a {
-        color: #1abc9c;
-        text-decoration: none;
-    }
-
-        .extra-links a:hover {
-            text-decoration: underline;
-        }
-
-.register-note {
-    text-align: center;
-    margin-top: 20px;
-    color: #ccc;
-    font-size: 0.9rem;
-}
-
-    .register-note a {
-        color: #1abc9c;
-        text-decoration: none;
-    }
-
-        .register-note a:hover {
-            text-decoration: underline;
-        }

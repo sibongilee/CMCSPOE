@@ -1,10 +1,15 @@
-﻿@{
+﻿@model CMCSPOE.Models.User;
+@{
     ViewData["Title"] = "Lecturer Dashboard";
+	ViewData["BodyClass"] = "dashboard-page";
 }
+
+<h1>Welcome to Lecturer Dashboard</h1>
+<p>You are logged in as: @TempData["User"]</p>
 <div class="container mt-4 p-4 bg-dark rounded shadow">
     <h2 class="text-info">Lecturer Dashboard</h2>
 
-    <div class="mt-4">
+    <div class="dashboard-container">
         <a class="btn btn-info w-100 mb-3" asp-controller="Claim" asp-action="SubmitClaim">
             ➤ Submit Claim
         </a>
@@ -18,5 +23,4 @@
         </a>
     </div>
 </div>
-	
 

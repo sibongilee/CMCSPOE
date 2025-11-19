@@ -1,14 +1,14 @@
 ﻿@model CMCSPOE.Models.User;
 @{
 	ViewData["Title"] = "Register";
+	
 }
+<h1 class="text-center text-white mb-3">Register</h1>
+<p class="text-center text-secondary mb-4">Create a new account to get started.</p>
 
-<h2>Register</h2>
-<hr />
-
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <form asp-action="Registration" method="post">
+<div class="d-flex justify-content-center">
+    <div class="login-card">
+        <form asp-action="Registration" method="post" class="login-form">
             <div class="mb-3">
                 <label asp-for="FullName" class="form-label"></label>
                 <input asp-for="FullName" class="form-control" />
@@ -22,9 +22,9 @@
             </div>
 
             <div class="mb-3">
-                <label asp-for="Password" class="form-label"></label>
-                <input asp-for="Password" class="form-control" type="password" />
-                <span asp-validation-for="Password" class="text-danger"></span>
+                <label asp-for="PasswordHash" class="form-label"></label>
+                <input asp-for="PasswordHash" class="form-control" type="password" />
+                <span asp-validation-for="PasswordHash" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
@@ -38,13 +38,18 @@
                 <span asp-validation-for="Role" class="text-danger"></span>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100">Register</button>
+            <button type="submit" class="btn btn-login w-100">Register</button>
 
             @if (ViewBag.Message != null)
             {
                 <div class="alert alert-info mt-3">@ViewBag.Message</div>
             }
         </form>
+        <div class="text-center mt-3 register-note">
+            <p>Already have an account?
+                <a asp-controller="Account" asp-action="Login">Login here</a>
+            </p>
+        </div>
     </div>
 </div>
 
