@@ -1,6 +1,6 @@
 ﻿@{
-	var userRole = TempData["user_Role"]?.ToString();
-	var userName = TempData["user_Name"]?.ToString();
+	var userRole = TempData["userRole"]?.ToString();
+	var userName = TempData["userName"]?.ToString();
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -37,16 +37,16 @@
 					<li class="nav-item">
 						<a class="nav-link" asp-controller="Home" asp-action="About">About</a>
 					</li>
-					@if(userName != null && userRole != null)
+					@if (userName != null && userRole != null)
 					{
 						<li class="nav-item">
 							<a class="nav-link" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
 						</li>
 					}
 
-					
+
 				</ul>
-				
+
 				<!-- RIGHT SIDE (Login status) -->
 				<ul class="navbar-nav">
 					@if (TempData["Username"] != null)

@@ -1,0 +1,74 @@
+﻿@model List<CMCSPOE.Models.Claim>
+@{
+    ViewData["Title"] = "Verify Claims";
+}
+
+<div class="dashboard-wrapper">
+    <h2>Pending / Flagged Claims</h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info">No pending claims found.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Claim</th>
+                        <th>Lecturer</th>
+                        <th>Hours</th>
+                        <th>Rate</th>
+                        <th>Total</th>
+                        <th>Submitted</th>
+                        <th>Document</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model)
+                    {
+                        <tr>
+                            <td>@c.ClaimId</td>
+                            <td>@(string.IsNullOrEmpty(c.LecturerName) ? "-" : c.LecturerName)</td>
+                            <td>@c.HoursWorked</td>
+                            <td>@c.HourlyRate.ToString("C")</td>
+                            <td>@c.TotalAmount.ToString("C")</td>
+                            <td>@(c.DateSubmitted == DateTime.MinValue ? "-" : c.DateSubmitted.ToString("g"))</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(c.DocumentPath))
+                                {
+                                    <a target="_blank" class="btn btn-sm btn-primary" href="~/uploads/@c.DocumentPath">View</a>
+                                }
+                            </td>
+                            <td>@c.Status</td>
+                            <td class="d-flex gap-1">
+                                <a class="btn btn-sm btn-primary" asp-action="VerifyClaim" asp-route-id="@c.ClaimId">Open</a>
+                                <form asp-action="ApproveClaims" method="post" style="display:inline">
+                                    <input type="hidden" name="claimId" value="@c.ClaimId" />
+                                    <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                                </form>
+                                <form asp-action="RejectClaim" method="post" style="display:inline">
+                                    <input type="hidden" name="claimId" value="@c.ClaimId" />
+                                    <input type="hidden" name="comment" value="Rejected via panel" />
+                                    <button class="btn btn-sm btn-danger" type="submit">Reject</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

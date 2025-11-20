@@ -1,51 +1,62 @@
 ﻿@model CMCSPOE.Models.User;
 @{
-	ViewData["Title"] = "Lecturer Dashboard";
+	ViewData["Title"] = " Dashboard";
 	var userRole = TempData["user_Role"]?.ToString();
 	var userName = TempData["user_Name"]?.ToString();
 }
+
 <h1 class="text-info text-center mb-4">Dashboard</h1>
-<p>You are logged in as: @TempData["user_Name"]</p>
+<div class="text-center mb-3">
+    <p class="fw-bold">Logged in as: @userName</p>
+    <p class="text-secondary">Role: @userRole</p>
+</div>
 
 <div class="dashboard-wrapper">
-	@if (userRole == "Lecturer")
-	{
-		<div class="dashboard-card mb-4">
-			<h3>Lecturer Panel</h3>
-			<p>Manage your claims and documents here.</p>
-			<a class="btn btn-primary w-100 mb-2" asp-controller="Claim" asp-action="SubmitClaim">Submit Claim</a>
-			<a class="btn btn-primary w-100 mb-2" asp-controller="Claim" asp-action="UploadDocuments">Upload Supporting documents</a>
-			<a class="btn btn-primary w-100 mb-2" asp-controller="Claim" asp-action="ViewClaims">View My Claims</a>
-
-			<nav class="nav-item">
-				<a class="nav-link dropdown-toggle" href="#" id="lecturerPanel" role="button" data-bs-toggle="dropdown">Lecturer Panel</a>
-				<ul class="dropdown-menu bg-dark">
-					<li>
-						<a class="dropdown-item text-white" asp-controller="Lecturer" asp-action="Create">Create Lecturer</a>
-					</li>
-					<li>
-						<a class="dropdown-item text-white" asp-controller="Lecturer" asp-action="LecturerList">Lecturer List</a>
-					</li>
-				</ul>
-			</nav>
-		</div>
-	}
-	@if (userRole == "Programme Coordinator")
-	{
-		<div class="dashboard-card mb-4">
-			<h3>Programme Coordinator Panel</h3>
-			<p>Verify and manage claims submitted by lecturers.</p>
-			<a class="btn btn-primary w-100 mb-2" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
-
-			<a class="btn btn-primary w-100 mb-2" asp-controller="Claim" asp-action="VerifyClaims">Verify Claims</a>
-		</div>
-	}
-
-	@if (userRole == "Academic Manager")
-	{
-		<div class="dashboard-card">
-			<a class="btn btn-primary w-100 mb-2" asp-controller="Claim" asp-action="ApproveClaims">Approve Claims</a>
-			<a class="btn btn-primary w-100 mb-2" asp-controller="Hr" asp-action="DownloadReport">DownloadReport(CSV)</a>
-		</div>
-	}
+    @if (!string.IsNullOrEmpty(userRole) && userRole.Equals("Lecturer", StringComparison.OrdinalIgnoreCase))
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Lecturer Panel</h5>
+                <small class="text-muted">Manage your claims and documents</small>
+            </div>
+            <div class="dashboard-card">
+                <a class="list-group-item list-group-item-action" asp-controller="Claim" asp-action="SubmitClaim">Submit Claim</a>
+                <a class="list-group-item list-group-item-action" asp-controller="Claim" asp-action="UploadDocuments">Upload Supporting Documents</a>
+                <a class="list-group-item list-group-item-action" asp-controller="Claim" asp-action="ViewClaims">View My Claims</a>
+                <div class="list-group-item">
+                    <div class="fw-bold">Lecturer Management</div>
+                    <a class="d-block mt-2" asp-controller="Lecturer" asp-action="Create">Create Lecturer</a>
+                    <a class="d-block" asp-controller="Lecturer" asp-action="LecturerList">Lecturer List</a>
+                </div>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(userRole) && userRole.Equals("Programme Coordinator", StringComparison.OrdinalIgnoreCase))
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Programme Coordinator Panel</h5>
+                <small class="text-muted">Verify and manage claims</small>
+            </div>
+            <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action" asp-controller="Dashboard" asp-action="Index">Dashboard Home</a>
+                <a class="list-group-item list-group-item-action" asp-controller="Claim" asp-action="VerifyClaims">Verify Claims</a>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(userRole) && userRole.Equals("Academic Manager", StringComparison.OrdinalIgnoreCase))
+    {
+        <div class="dashboard-card">
+            <a class="btn btn-primary w-100 mb-2" asp-controller="Claim" asp-action="ApproveClaims">Approve Claims</a>
+            <a class="btn btn-primary w-100 mb-2" asp-controller="Hr" asp-action="DownloadReport">Download Report (CSV)</a>
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-body">
+                <p class="mb-0">No role-specific actions available.</p>
+            </div>
+        </div>
+    }
 </div>

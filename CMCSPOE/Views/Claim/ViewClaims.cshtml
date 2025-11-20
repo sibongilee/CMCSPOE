@@ -4,49 +4,44 @@
     ViewData["Title"] = "My Claims";
 }
 
-<h3 class="text-white fw-bold mb-3">My Submitted Claims</h3>
+<div class="dashboard-wrapper">
+    <h2>My Claims</h2>
 
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">@TempData["Success"]</div>
-}
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger">@TempData["Error"]</div>
-}
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
 
-<table class="table table-dark table-striped table-bordered shadow">
-    <thead>
-        <tr>
-            <th>Claim ID</th>
-            <th>Hours</th>
-            <th>Rate</th>
-            <th>Status</th>
-            <th>Document</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        @foreach (var claim in Model)
-        {
-            <tr>
-                <td>@claim.ClaimId</td>
-                <td>@claim.HoursWorked</td>
-                <td>R @claim.HourlyRate</td>
-                <td>
-                    <span class="badge bg-info">@claim.Status</span>
-                </td>
-                <td>
-                    @if (!string.IsNullOrEmpty(claim.DocumentPath))
-                    {
-                        <a href="~/uploads/@claim.DocumentPath" class="btn btn-sm btn-outline-light">View File</a>
-                    }
-                </td>
-                <td>
-                    <a asp-action="UploadDocuments" asp-route-id="@claim.ClaimId" class="btn btn-sm btn-light">Upload Document</a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info">You have not submitted any claims yet.</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var c in Model)
+            {
+                <div class="col-md-6 mb-3">
+                    <div class="dashboard-card">
+                        <h3>Claim #@c.ClaimId</h3>
+                        <p><strong>Submitted:</strong> @(c.DateSubmitted == DateTime.MinValue ? "-" : c.DateSubmitted.ToString("g"))</p>
+                        <p><strong>Hours:</strong> @c.HoursWorked</p>
+                        <p><strong>Total:</strong> @c.TotalAmount.ToString("C")</p>
+                        <p><strong>Status:</strong> @c.Status</p>
+                        <div class="mt-2 d-grid gap-2">
+                            <a class="btn btn-primary" asp-action="UploadDocuments" asp-route-id="@c.ClaimId">Upload / Replace Document</a>
+                            @if (!string.IsNullOrEmpty(c.DocumentPath))
+                            {
+                                <a class="btn btn-secondary" target="_blank" href="~/uploads/@c.DocumentPath">View Document</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

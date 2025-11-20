@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+    using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
 using CMCSPOE.Data;
 using CMCSPOE.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -69,22 +71,28 @@ namespace CMCSPOE.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult UploadDocuments(int claimId, IFormFile document)
         {
-            if (document == null)
+            // document will be null if the form input name doesn't match the parameter name.
+            if (document == null || document.Length == 0)
             {
                 TempData["Error"] = "Please select a file.";
+                ViewBag.ClaimId = claimId; // ensure view keeps claim id on error
                 return View();
             }
 
             try
             {
-                // folder
+                // ensure uploads folder exists
                 string folder = Path.Combine(_env.WebRootPath, "uploads");
                 if (!Directory.Exists(folder))
                     Directory.CreateDirectory(folder);
 
-                string filePath = Path.Combine(folder, document.FileName);
+                // sanitize filename and generate unique name to avoid collisions
+                var originalFileName = Path.GetFileName(document.FileName);
+                var uniqueFileName = $"{Guid.NewGuid():N}_{originalFileName}";
+                string filePath = Path.Combine(folder, uniqueFileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
@@ -99,7 +107,7 @@ namespace CMCSPOE.Controllers
 
                     using (SqlCommand cmd = new SqlCommand(sql, con))
                     {
-                        cmd.Parameters.AddWithValue("@Document", document.FileName);
+                        cmd.Parameters.AddWithValue("@Document", uniqueFileName);
                         cmd.Parameters.AddWithValue("@ClaimId", claimId);
                         cmd.ExecuteNonQuery();
                     }
@@ -111,6 +119,7 @@ namespace CMCSPOE.Controllers
             catch (Exception ex)
             {
                 TempData["Error"] = "Error uploading file: " + ex.Message;
+                ViewBag.ClaimId = claimId;
                 return View();
             }
         }
@@ -177,9 +186,11 @@ namespace CMCSPOE.Controllers
         // GET: /Claim/VerifyClaims  (for Coordinators / Managers)
         public IActionResult VerifyClaims()
         {
-            // check role
+            // case-insensitive role check and null-safe
             var role = HttpContext.Session.GetString("Role");
-            if (role == null || (role != "Programme Coordinator" && role != "Academic Manager"))
+            if (string.IsNullOrEmpty(role) ||
+                !(role.Equals("Programme Coordinator", StringComparison.OrdinalIgnoreCase)
+                  || role.Equals("Academic Manager", StringComparison.OrdinalIgnoreCase)))
             {
                 TempData["Error"] = "Unauthorized access.";
                 return RedirectToAction("Index", "Dashboard");
@@ -191,31 +202,49 @@ namespace CMCSPOE.Controllers
                 using (var conn = db.GetConnection())
                 {
                     conn.Open();
-                    string sql = @"SELECT c.*, l.LecturerId, u.FullName
-                                   FROM Claims c
-                                   JOIN Lecturer l ON c.LecturerId = l.LecturerId
-                                   JOIN Users u ON l.UserId = u.UserId
-                                   WHERE c.Status IN ('Pending','Flagged')
-                                   ORDER BY c.DateSubmitted DESC";
+
+                    // Select explicit columns and avoid ambiguous names
+                    string sql = @"
+                        SELECT 
+                            c.ClaimId,
+                            c.LecturerId,
+                            c.HoursWorked,
+                            c.HourlyRate,
+                            c.TotalAmount,
+                            -- try both possible text columns; prefer Notes
+                            ISNULL(c.Notes, c.Description) AS Notes,
+                            c.Status,
+                            c.DocumentPath,
+                            c.ViolationReasons,
+                            c.DateSubmitted,
+                            u.FullName AS LecturerName
+                        FROM Claims c
+                        JOIN Lecturer l ON c.LecturerId = l.LecturerId
+                        JOIN Users u ON l.UserId = u.UserId
+                        WHERE c.Status IN ('Pending','Flagged')
+                        ORDER BY c.DateSubmitted DESC";
 
                     using (var cmd = new SqlCommand(sql, conn))
                     using (var rd = cmd.ExecuteReader())
                     {
                         while (rd.Read())
                         {
-                            list.Add(new Claim
+                            var claim = new Claim
                             {
-                                ClaimId = Convert.ToInt32(rd["ClaimId"]),
-                                LecturerId = Convert.ToInt32(rd["LecturerId"]),
-                                HoursWorked = Convert.ToInt32(rd["HoursWorked"]),
-                                HourlyRate = Convert.ToDecimal(rd["HourlyRate"]),
+                                ClaimId = rd["ClaimId"] == DBNull.Value ? 0 : Convert.ToInt32(rd["ClaimId"]),
+                                LecturerId = rd["LecturerId"] == DBNull.Value ? 0 : Convert.ToInt32(rd["LecturerId"]),
+                                HoursWorked = rd["HoursWorked"] == DBNull.Value ? 0 : Convert.ToInt32(rd["HoursWorked"]),
+                                HourlyRate = rd["HourlyRate"] == DBNull.Value ? 0 : Convert.ToDecimal(rd["HourlyRate"]),
                                 TotalAmount = rd["TotalAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(rd["TotalAmount"]),
-                                Notes = rd["Description"] == DBNull.Value ? null : rd["Description"].ToString(),
-                                Status = rd["Status"].ToString(),
+                                Notes = rd["Notes"] == DBNull.Value ? null : rd["Notes"].ToString(),
+                                Status = rd["Status"] == DBNull.Value ? null : rd["Status"].ToString(),
                                 DocumentPath = rd["DocumentPath"] == DBNull.Value ? null : rd["DocumentPath"].ToString(),
                                 ViolationReasons = rd["ViolationReasons"] == DBNull.Value ? null : rd["ViolationReasons"].ToString(),
-                                DateSubmitted = rd["DateSubmitted"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(rd["DateSubmitted"])
-                            });
+                                DateSubmitted = rd["DateSubmitted"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(rd["DateSubmitted"]),
+                                LecturerName = rd["LecturerName"] == DBNull.Value ? null : rd["LecturerName"].ToString()
+                            };
+
+                            list.Add(claim);
                         }
                     }
                 }
@@ -225,7 +254,8 @@ namespace CMCSPOE.Controllers
                 TempData["Error"] = "Error loading pending claims: " + ex.Message;
             }
 
-            return View(list);
+            // Ensure view file name matches: Views/Claim/VerifyClaims.cshtml
+            return View("VerifyClaims", list);
         }
 
         [HttpGet]
@@ -332,6 +362,10 @@ namespace CMCSPOE.Controllers
         }
     }
 }
+
+
+
+
 
 
 
