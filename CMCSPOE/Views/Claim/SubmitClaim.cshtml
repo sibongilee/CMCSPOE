@@ -39,3 +39,18 @@
         <button type="submit" class="btn btn-primary w-100">Submit Claim</button>
     </form>
 </div>
+@section Scripts
+{
+    <script src="http://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function calculateTotal(){
+			let hours = parseFloat($('#HoursWorked').val()) || 0;
+			let rate = parseFloat($('#HourlyRate').val()) || 0;
+			$('#TotalAmount').val((hours * rate).toFixed(2));
+		}
+		$("#hours,#rate").on('input', calculateTotal);
+        $(document).ready(function(){
+            calculateTotal();
+		});
+	</script>
+}

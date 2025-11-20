@@ -61,21 +61,31 @@ CREATE TABLE ClaimDocuments(
 );
 GO
 
+
 -- CREATE VIEW must be the only statement in the batch
 CREATE VIEW vw_ClaimSummary AS
 SELECT 
-    c.ClaimId,
+ c.ClaimId,
     COALESCE(l.LecturerName, u.FullName) AS LecturerName,
     c.HoursWorked,
     c.HourlyRate,
     c.TotalAmount,
     c.Status,
-    c.DateSubmitted
+    c.DateSubmitted,
+
+    -- New fields from Approvals table
+    a.ApprovedBy,
+    a.ApprovalDate,
+    a.Comments
+
 FROM Claims c
 JOIN Lecturers l ON c.LecturerId = l.LecturerId
-LEFT JOIN Users u ON l.UserId = u.UserId;
+LEFT JOIN Users u ON l.UserId = u.UserId
+LEFT JOIN Approvals a ON c.ClaimId = a.ClaimId;
 GO
 
+DROP VIEW IF EXISTS vw_ClaimSummary;
+GO
 /* --------------------------------------------------------------
    9. STORED PROCEDURES
 ----------------------------------------------------------------*/
@@ -161,3 +171,24 @@ BEGIN
     INSERT INTO ClaimDocuments (ClaimId, FileName, FilePath, DateUploaded)
     VALUES (@ClaimId, @FileName, @FilePath, GETDATE());
 END
+GO
+CREATE VIEW vw_HrReport AS
+SELECT
+c.ClaimId,
+ COALESCE(l.LecturerName, u.FullName) AS LecturerName,
+    c.HoursWorked,
+    c.HourlyRate,
+    (c.HoursWorked * c.HourlyRate) AS TotalAmount,
+    a.ApprovalDate AS ApprovedDate
+FROM Claims c
+JOIN Lecturers l ON c.LecturerId = l.LecturerId
+LEFT JOIN Users u ON l.UserId = u.UserId
+LEFT JOIN Approvals a ON c.ClaimId = a.ClaimId
+WHERE c.Status = 'Approved';
+GO
+
+CREATE PROCEDURE sp_GetHrReport AS
+BEGIN
+    SELECT * FROM vw_HrReport;
+END
+GO

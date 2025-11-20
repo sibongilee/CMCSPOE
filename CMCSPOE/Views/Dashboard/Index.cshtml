@@ -4,59 +4,107 @@
 	var userRole = TempData["user_Role"]?.ToString();
 	var userName = TempData["user_Name"]?.ToString();
 }
+<div class="dashboard-container text-center">
 
-<h1 class="text-info text-center mb-4">Dashboard</h1>
-<div class="text-center mb-3">
-    <p class="fw-bold">Logged in as: @userName</p>
-    <p class="text-secondary">Role: @userRole</p>
-</div>
+    <h1 class="dashboard-title">Welcome to the Monthly Claim System</h1>
 
-<div class="dashboard-wrapper">
-    @if (!string.IsNullOrEmpty(userRole) && userRole.Equals("Lecturer", StringComparison.OrdinalIgnoreCase))
-    {
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Lecturer Panel</h5>
-                <small class="text-muted">Manage your claims and documents</small>
-            </div>
-            <div class="dashboard-card">
-                <a class="list-group-item list-group-item-action" asp-controller="Claim" asp-action="SubmitClaim">Submit Claim</a>
-                <a class="list-group-item list-group-item-action" asp-controller="Claim" asp-action="UploadDocuments">Upload Supporting Documents</a>
-                <a class="list-group-item list-group-item-action" asp-controller="Claim" asp-action="ViewClaims">View My Claims</a>
-                <div class="list-group-item">
-                    <div class="fw-bold">Lecturer Management</div>
-                    <a class="d-block mt-2" asp-controller="Lecturer" asp-action="Create">Create Lecturer</a>
-                    <a class="d-block" asp-controller="Lecturer" asp-action="LecturerList">Lecturer List</a>
+    <p class="dashboard-subtitle">
+        Users can submit, review, and approve monthly claims based on their assigned roles.
+        Please select the action panel below to continue.
+    </p>
+
+    <p class="text-light mt-3">
+        <strong>@userName</strong> — <span class="text-info">@userRole</span>
+    </p>
+
+    <div class="row justify-content-center mt-5">
+
+        <!-- Lecturer Panel -->
+        @if (userRole == "Lecturer")
+        {
+            <div class="col-md-4 mb-4">
+                <div class="dashboard-card">
+                    <h3>Lecturer</h3>
+                    <p>Submit and track your monthly claims.</p>
+
+                    <a class="btn btn-primary w-100 mb-2" asp-controller="Claim" asp-action="SubmitClaim">
+                        Submit Claim
+                    </a>
+
+                    <a class="btn btn-secondary w-100 mb-2" asp-controller="Claim" asp-action="ViewClaims">
+                        Track My Claims
+                    </a>
+
+                    <a class="btn btn-light w-100 mb-2" asp-controller="Claim" asp-action="UploadDocuments">
+                        Upload Supporting Documents
+                    </a>
+
+                    <hr class="border-secondary">
+
+                    <h6 class="text-info">Lecturer Management</h6>
+                    <a class="btn btn-outline-info w-100 mb-2" asp-controller="Lecturer" asp-action="Create">
+                        Create Lecturer
+                    </a>
+                    <a class="btn btn-outline-info w-100" asp-controller="Lecturer" asp-action="LecturerList">
+                        Lecturer List
+                    </a>
                 </div>
             </div>
-        </div>
-    }
-    else if (!string.IsNullOrEmpty(userRole) && userRole.Equals("Programme Coordinator", StringComparison.OrdinalIgnoreCase))
-    {
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Programme Coordinator Panel</h5>
-                <small class="text-muted">Verify and manage claims</small>
+        }
+
+        <!-- Programme Coordinator Panel -->
+        @if (userRole == "Programme Coordinator")
+        {
+            <div class="col-md-4 mb-4">
+                <div class="dashboard-card">
+                    <h3>Program Coordinator</h3>
+                    <p>Review and pre-approve claims.</p>
+
+                    <a class="btn btn-primary w-100 mb-3" asp-controller="Claim" asp-action="VerifyClaims">
+                        Verify Claims
+                    </a>
+
+                    <a class="btn btn-secondary w-100" asp-controller="Dashboard" asp-action="Index">
+                        Dashboard Home
+                    </a>
+                    <a href="javasript:history.back()">Go back</a>
+                </div>
             </div>
-            <div class="list-group list-group-flush">
-                <a class="list-group-item list-group-item-action" asp-controller="Dashboard" asp-action="Index">Dashboard Home</a>
-                <a class="list-group-item list-group-item-action" asp-controller="Claim" asp-action="VerifyClaims">Verify Claims</a>
+        }
+
+        <!-- Academic Manager Panel -->
+        @if (userRole == "Academic Manager")
+        {
+            <div class="col-md-4 mb-4">
+                <div class="dashboard-card">
+                    <h3>Program Manager</h3>
+                    <p>Approve or reject finalized claims.</p>
+
+                    <a class="btn btn-success w-100 mb-3" asp-controller="Claim" asp-action="ApproveClaims">
+                        Approve Claims
+                    </a>
+
+                    <a class="btn btn-warning w-100" asp-controller="Hr" asp-action="DownloadReport">
+                        Download Report (CSV)
+                    </a>
+                    <a class="btn btn-warningw-100" asp-controller="Hr" asp-action="Index">
+                        HR Reports</a>
+                </div>
             </div>
-        </div>
-    }
-    else if (!string.IsNullOrEmpty(userRole) && userRole.Equals("Academic Manager", StringComparison.OrdinalIgnoreCase))
-    {
-        <div class="dashboard-card">
-            <a class="btn btn-primary w-100 mb-2" asp-controller="Claim" asp-action="ApproveClaims">Approve Claims</a>
-            <a class="btn btn-primary w-100 mb-2" asp-controller="Hr" asp-action="DownloadReport">Download Report (CSV)</a>
-        </div>
-    }
-    else
-    {
-        <div class="card">
-            <div class="card-body">
-                <p class="mb-0">No role-specific actions available.</p>
+        }
+
+        <!-- Fallback Panel -->
+        @if (string.IsNullOrEmpty(userRole))
+        {
+            <div class="col-md-4 mb-4">
+                <div class="dashboard-card">
+                    <h3>Unknown Role</h3>
+                    <p>No role-specific actions available.</p>
+                </div>
             </div>
-        </div>
-    }
+        }
+
+    </div>
+
 </div>
+

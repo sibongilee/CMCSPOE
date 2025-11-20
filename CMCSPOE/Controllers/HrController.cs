@@ -37,7 +37,7 @@ namespace CMCSPOE.Controllers
                             LecturerName = reader["FullName"].ToString(),
                             HoursWorked = Convert.ToDecimal(reader["HoursWorked"]),
                             HourlyRate = Convert.ToDecimal(reader["HourlyRate"]),
-                            FinalAmount = Convert.ToDecimal(reader["FinalAmount"]),
+                            TotalAmount = Convert.ToDecimal(reader["FinalAmount"]),
                             ApprovedDate = Convert.ToDateTime(reader["ApprovedDate"])
                         });
                     }

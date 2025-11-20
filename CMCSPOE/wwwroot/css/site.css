@@ -132,49 +132,85 @@ button, .btn {
 /* DASHBOARD */
 /* ============================= */
 
+
 .dashboard-container {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin: 30px auto;
+    text-align: center;
+    padding-top: 40px;
+    color: #ffffff;
+    background: #0f1116;
+    padding-bottom: 60px;
 }
+
+.dashboard-title {
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: #fff;
+}
+
+.dashboard-subtitle {
+    color: #c8c8c8;
+    font-size: 1rem;
+    max-width: 650px;
+    margin: 10px auto 30px;
+}
+
 .dashboard-wrapper {
-    max-width: 900px;
-    margin: 0 auto;
-    background: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    max-width: 1200px;
+    margin: 40px auto;
 }
 
 .dashboard-card {
-    display: block;
-    background: #ffffff;
+    background: #1c1f26;
     padding: 25px;
-    border-radius: 10px;
+    border-radius: 15px;
     text-align: center;
-    text-decoration: none;
-    color: #000;
-    font-weight: bold;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-    transition: 0.2s;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.45);
+    transition: transform .2s ease, box-shadow .2s ease;
 }
 
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.55);
+    }
+
     .dashboard-card h3 {
-        color: #003366;
-        font-size: 1.4em;
+        font-size: 1.4rem;
+        color: #4da6ff;
     }
 
     .dashboard-card p {
-        font-size: 1.2em;
-        color: #2e8b57;
-        font-weight: bold;
+        font-size: 1rem;
+        color: #cdd3df;
     }
-    .dashboard-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+
+    /* Buttons inside cards */
+    .dashboard-card .btn {
+        border-radius: 10px !important;
+        padding: 10px 15px !important;
+        font-weight: 500;
     }
+.role-card-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+    .role-card-grid .dashboard-card {
+        width: 300px;
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        transition: 0.2s;
+    }
+
+        .role-card-grid .dashboard-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
 
 /* ============================= */
 /* ALERT BOXES */
