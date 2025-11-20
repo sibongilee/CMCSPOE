@@ -1,27 +1,51 @@
 ﻿@model CMCSPOE.Models.User;
 @{
-    ViewData["Title"] = "Lecturer Dashboard";
-	ViewData["BodyClass"] = "dashboard-page";
+	ViewData["Title"] = "Lecturer Dashboard";
+	var userRole = TempData["user_Role"]?.ToString();
+	var userName = TempData["user_Name"]?.ToString();
 }
+<h1 class="text-info text-center mb-4">Dashboard</h1>
+<p>You are logged in as: @TempData["user_Name"]</p>
 
-<h1>Welcome to Lecturer Dashboard</h1>
-<p>You are logged in as: @TempData["UserName"]</p>
-<div class="container mt-4 p-4 bg-dark rounded shadow">
-    <h2 class="text-info">Lecturer Dashboard</h2>
+<div class="dashboard-wrapper">
+	@if (userRole == "Lecturer")
+	{
+		<div class="dashboard-card mb-4">
+			<h3>Lecturer Panel</h3>
+			<p>Manage your claims and documents here.</p>
+			<a class="btn btn-primary w-100 mb-2" asp-controller="Claim" asp-action="SubmitClaim">Submit Claim</a>
+			<a class="btn btn-primary w-100 mb-2" asp-controller="Claim" asp-action="UploadDocuments">Upload Supporting documents</a>
+			<a class="btn btn-primary w-100 mb-2" asp-controller="Claim" asp-action="ViewClaims">View My Claims</a>
 
-    <div class="dashboard-wrapper">
-        <a class="btn btn-info w-100 mb-3" asp-controller="Claim" asp-action="SubmitClaim">
-            ➤ Submit Claim
-        </a>
+			<nav class="nav-item">
+				<a class="nav-link dropdown-toggle" href="#" id="lecturerPanel" role="button" data-bs-toggle="dropdown">Lecturer Panel</a>
+				<ul class="dropdown-menu bg-dark">
+					<li>
+						<a class="dropdown-item text-white" asp-controller="Lecturer" asp-action="Create">Create Lecturer</a>
+					</li>
+					<li>
+						<a class="dropdown-item text-white" asp-controller="Lecturer" asp-action="LecturerList">Lecturer List</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	}
+	@if (userRole == "Programme Coordinator")
+	{
+		<div class="dashboard-card mb-4">
+			<h3>Programme Coordinator Panel</h3>
+			<p>Verify and manage claims submitted by lecturers.</p>
+			<a class="btn btn-primary w-100 mb-2" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
 
-        <a class="btn btn-secondary w-100 mb-3" asp-controller="Claim" asp-action="ViewClaims">
-            ➤ View My Claims
-        </a>
+			<a class="btn btn-primary w-100 mb-2" asp-controller="Claim" asp-action="VerifyClaims">Verify Claims</a>
+		</div>
+	}
 
-        <a class="btn btn-light w-100" asp-controller="Claim" asp-action="UploadDocuments">
-            ➤ Upload Supporting Documents
-        </a>
-
-    </div>
+	@if (userRole == "Academic Manager")
+	{
+		<div class="dashboard-card">
+			<a class="btn btn-primary w-100 mb-2" asp-controller="Claim" asp-action="ApproveClaims">Approve Claims</a>
+			<a class="btn btn-primary w-100 mb-2" asp-controller="Hr" asp-action="DownloadReport">DownloadReport(CSV)</a>
+		</div>
+	}
 </div>
-

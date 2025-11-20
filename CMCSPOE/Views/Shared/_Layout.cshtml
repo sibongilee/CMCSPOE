@@ -34,73 +34,18 @@
 					<li class="nav-item">
 						<a class="nav-link" asp-controller="Home" asp-action="Privacy">Privacy</a>
 					</li>
+					<li class="nav-item">
+						<a class="nav-link" asp-controller="Home" asp-action="About">About</a>
+					</li>
+					@if(userName != null && userRole != null)
+					{
+						<li class="nav-item">
+							<a class="nav-link" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+						</li>
+					}
+
 					
 				</ul>
-				<button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-						data-bs-target="#navbarNav" aria-controls="navbarNav"
-						aria-expanded="false" aria-label="Toggle navigation">
-					<span class="navbar-toggler-icon"></span>
-				</button>
-
-				<div class="collapse navbar-collapse" id="navbarNav">
-					<ul class="navbar-nav me-auto mb-2 mb-lg-0">
-
-						@if (TempData["userName"] != null)
-						{
-							<li class="nav-item">
-								<span class="navbar-text text-white me-3">
-									@TempData["userName"]
-									(@TempData["userRole"])
-								</span>
-							</li>
-						}
-
-						@if (userRole == "Lecturer")
-						{
-							<li class="nav-item">
-								<a class="nav-link" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
-							</li>
-							<li class="nav-item">
-								<a class="nav-link" asp-controller="Claim" asp-action="SubmitClaim">Submit Claim</a>
-							</li>
-							<li class="nav-item">
-								<a class="nav-link" asp-controller="Claim" asp-action="UploadDocuments">Upload Supporting documents</a>
-							</li>
-							<li class="nav-item">
-								<a class="nav-link" asp-controller="Claim" asp-action="ViewClaims">View My Claims</a>
-							</li>
-							<li class="nav-item dropdown">
-								<a class="nav-link dropdown-toggle" href="#" id="lecturerPanel" role="button" data-bs-toggle="dropdown">Lecturer Panel</a>
-								<ul class="dropdown-menu bg-dark">
-									<li>
-										<a class="dropdown-item text-white" asp-controller="Lecturer" asp-action="Create">Create Lecturer</a>
-									</li>
-									<li>
-										<a class="dropdown-item text-white" asp-controller="Lecturer" asp-action="LecturerList">Lecturer List</a>
-									</li>
-								</ul>
-							</li>
-						}
-						@if (userRole == "Programme Coordinator")
-						{
-							<li class="nav-item">
-								<a class="nav-link" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
-							</li>
-							<li class="nav-item">
-								<a class="nav-link" asp-controller="Claim" asp-action="VerifyClaims">Verify Claims</a>
-							</li>
-						}
-						@if (userRole == "Academic Manager")
-						{
-							<div class="col-md-4 mb-3">
-								<a class="dashboard-card" asp-controller="Claim" asp-action="ApproveClaims">Approve Claims</a>
-							</div>
-							<div class="col-md-4 mb-3">
-								<a class="dashboard-card" asp-controller="Claim" asp-action="ApproveClaims">Approve Claims</a>
-							</div>
-						}
-					</ul>
-				</div>
 				
 				<!-- RIGHT SIDE (Login status) -->
 				<ul class="navbar-nav">
