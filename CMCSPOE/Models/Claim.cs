@@ -16,11 +16,10 @@ namespace CMCSPOE.Models
         public string Notes { get; set; }
 
         public string? DocumentPath { get; set; }
+        public string ViolationReasons { get; set; }
+        public DateTime DateSubmitted { get; set; } = DateTime.Now;
         public string Status { get; set; } = "Pending"; // Pending, Approved, Rejected
         public string LecturerName { get; set; }
+        public decimal TotalAmount { get; set; }
     }
 }
-
-  
-
-   

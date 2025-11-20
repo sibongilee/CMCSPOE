@@ -1,6 +1,6 @@
 ﻿@{
-	var userRole = TempData["userRole"]?.ToString();
-	var userName = TempData["userName"]?.ToString();
+	var userRole = TempData["user_Role"]?.ToString();
+	var userName = TempData["user_Name"]?.ToString();
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -69,9 +69,19 @@
 							<li class="nav-item">
 								<a class="nav-link" asp-controller="Claim" asp-action="ViewClaims">View My Claims</a>
 							</li>
-
+							<li class="nav-item dropdown">
+								<a class="nav-link dropdown-toggle" href="#" id="lecturerPanel" role="button" data-bs-toggle="dropdown">Lecturer Panel</a>
+								<ul class="dropdown-menu bg-dark">
+									<li>
+										<a class="dropdown-item text-white" asp-controller="Lecturer" asp-action="Create">Create Lecturer</a>
+									</li>
+									<li>
+										<a class="dropdown-item text-white" asp-controller="Lecturer" asp-action="LecturerList">Lecturer List</a>
+									</li>
+								</ul>
+							</li>
 						}
-						else if (userRole == "Programme Coordinator")
+						@if (userRole == "Programme Coordinator")
 						{
 							<li class="nav-item">
 								<a class="nav-link" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
@@ -80,25 +90,18 @@
 								<a class="nav-link" asp-controller="Claim" asp-action="VerifyClaims">Verify Claims</a>
 							</li>
 						}
-						else if (userRole == "Academic Manager")
+						@if (userRole == "Academic Manager")
 						{
-							<li class="nav-item">
-								<a class="nav-link" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
-							</li>
-							<li class="nav-item">
-								<a class="nav-link" asp-controller="Claim" asp-action="ApproveClaims">Approve Claims</a>
-							</li>
-						}
-						else
-						{
-							<li class="nav-item">
-								<a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
-							</li>
+							<div class="col-md-4 mb-3">
+								<a class="dashboard-card" asp-controller="Claim" asp-action="ApproveClaims">Approve Claims</a>
+							</div>
+							<div class="col-md-4 mb-3">
+								<a class="dashboard-card" asp-controller="Claim" asp-action="ApproveClaims">Approve Claims</a>
+							</div>
 						}
 					</ul>
 				</div>
-
-
+				
 				<!-- RIGHT SIDE (Login status) -->
 				<ul class="navbar-nav">
 					@if (TempData["Username"] != null)
@@ -133,9 +136,9 @@
 		</main>
 	</div>
 
-	<footer>
+	<footer class="text-center mt-5 mb-3">
 		<div class="container">
-			<span class="text-white">&copy;@DateTime.Now.Year- CMCSPOE System</span>
+			<span class="text-white">&copy;@DateTime.Now.Year - CMCSPOE System</span>
 		</div>
 	</footer>
 	<script src="~/lib/jquery/dist/jquery.min.js"></script>

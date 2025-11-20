@@ -13,7 +13,7 @@ namespace CMCSPOE.Models
         public string Email { get; set; }
         [Required]
         [DataType(DataType.Password)]
-        public string PasswordHash { get; set; }
+        public string PasswordHash { get; set; } = string.Empty;
         [Required]
         [Display(Name = "Role")]
         public string Role { get; set; } // Lecturer, Programme Coordinator, Academic Manager

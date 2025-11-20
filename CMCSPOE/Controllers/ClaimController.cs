@@ -1,11 +1,13 @@
-﻿using System.Data.SqlClient;
+﻿using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
 using CMCSPOE.Data;
 using CMCSPOE.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Authorization;
 
 namespace CMCSPOE.Controllers
 {
@@ -115,70 +117,115 @@ namespace CMCSPOE.Controllers
 
 
         // View My Claims (Lecturer)
-        public IActionResult ViewMyClaims()
+        public IActionResult ViewClaims()
         {
-            int? lecturerId = HttpContext.Session.GetInt32("LecturerId");
-            if (lecturerId == null)
-                return RedirectToAction("Login", "Account");
-
-            List<Claim> claims = new List<Claim>();
-            using (SqlConnection con = db.GetConnection())
+            var list = new List<Claim>();
+            try
             {
-                con.Open();
-                string query = "SELECT * FROM Claims WHERE LecturerId=@LecturerId";
-                SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@LecturerId", lecturerId);
+                int? userId = HttpContext.Session.GetInt32("UserId");
+                if (userId == null) return RedirectToAction("Login", "Account");
 
-                SqlDataReader reader = cmd.ExecuteReader();
-                while (reader.Read())
+                // Map user -> lecturer id
+                int lecturerId = 0;
+                using (var con = db.GetConnection())
                 {
-                    claims.Add(new Claim
+                    con.Open();
+                    using (var cmd = new SqlCommand("SELECT TOP 1 LecturerId FROM Lecturer WHERE UserId = @UserId", con))
                     {
-                        ClaimId = (int)reader["ClaimId"],
-                        LecturerId = (int)reader["LecturerId"],
-                        HoursWorked = (int)reader["HoursWorked"],
-                        HourlyRate = (decimal)reader["HourlyRate"],
-                        Notes = reader["Notes"].ToString(),
-                        Status = reader["Status"].ToString(),
-                
-                    });
+                        cmd.Parameters.AddWithValue("@UserId", userId.Value);
+                        var r = cmd.ExecuteScalar();
+                        if (r == null) { ViewBag.Error = "Lecturer profile not found.";
+                            return View(list);
+                        }
+                        lecturerId = Convert.ToInt32(r);
+                    }
+
+                    string sql = "SELECT * FROM Claims WHERE LecturerId = @LecturerId ORDER BY DateSubmitted DESC";
+                    using (var cmd = new SqlCommand(sql, con))
+                    {
+                        cmd.Parameters.AddWithValue("@LecturerId", lecturerId);
+                        using (var rd = cmd.ExecuteReader())
+                        {
+                            while (rd.Read())
+                            {
+                                list.Add(new Claim
+                                {
+                                    ClaimId = Convert.ToInt32(rd["ClaimId"]),
+                                    LecturerId = Convert.ToInt32(rd["LecturerId"]),
+                                    HoursWorked = Convert.ToInt32(rd["HoursWorked"]),
+                                    HourlyRate = Convert.ToDecimal(rd["HourlyRate"]),
+                                    TotalAmount = rd["TotalAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(rd["TotalAmount"]),
+                                    Notes = rd["Description"] == DBNull.Value ? null : rd["Description"].ToString(),
+                                    Status = rd["Status"].ToString(),
+                                    DocumentPath = rd["DocumentPath"] == DBNull.Value ? null : rd["DocumentPath"].ToString(),
+                                    ViolationReasons = rd["ViolationReasons"] == DBNull.Value ? null : rd["ViolationReasons"].ToString(),
+                                    DateSubmitted = rd["DateSubmitted"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(rd["DateSubmitted"])
+                                });
+                            }
+                        }
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error loading claims: " + ex.Message;
+            }
 
-            return View(claims);
+            return View(list);
         }
 
-        // Verify Claims (PC & AM)
+        // GET: /Claim/VerifyClaims  (for Coordinators / Managers)
         public IActionResult VerifyClaims()
         {
-            string role = HttpContext.Session.GetString("Role");
-            if (role != "Programme Coordinator" && role != "Academic Manager")
-                return RedirectToAction("Index", "Dashboard");
-
-            List<Claim> claims = new List<Claim>();
-            using (SqlConnection con = db.GetConnection())
+            // check role
+            var role = HttpContext.Session.GetString("Role");
+            if (role == null || (role != "Programme Coordinator" && role != "Academic Manager"))
             {
-                con.Open();
-                string query = "SELECT * FROM Claims WHERE Status='Pending'";
-                SqlCommand cmd = new SqlCommand(query, con);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    claims.Add(new Claim
-                    {
-                        ClaimId = (int)reader["ClaimId"],
-                        LecturerId = (int)reader["LecturerId"],
-                        HoursWorked = (int)reader["HoursWorked"],
-                        HourlyRate = (decimal)reader["HourlyRate"],
-                        Notes = reader["Notes"].ToString(),
-                        Status = reader["Status"].ToString(),
-                       
-                    });
-                }
+                TempData["Error"] = "Unauthorized access.";
+                return RedirectToAction("Index", "Dashboard");
             }
 
-            return View(claims);
+            var list = new List<Claim>();
+            try
+            {
+                using (var conn = db.GetConnection())
+                {
+                    conn.Open();
+                    string sql = @"SELECT c.*, l.LecturerId, u.FullName
+                                   FROM Claims c
+                                   JOIN Lecturer l ON c.LecturerId = l.LecturerId
+                                   JOIN Users u ON l.UserId = u.UserId
+                                   WHERE c.Status IN ('Pending','Flagged')
+                                   ORDER BY c.DateSubmitted DESC";
+
+                    using (var cmd = new SqlCommand(sql, conn))
+                    using (var rd = cmd.ExecuteReader())
+                    {
+                        while (rd.Read())
+                        {
+                            list.Add(new Claim
+                            {
+                                ClaimId = Convert.ToInt32(rd["ClaimId"]),
+                                LecturerId = Convert.ToInt32(rd["LecturerId"]),
+                                HoursWorked = Convert.ToInt32(rd["HoursWorked"]),
+                                HourlyRate = Convert.ToDecimal(rd["HourlyRate"]),
+                                TotalAmount = rd["TotalAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(rd["TotalAmount"]),
+                                Notes = rd["Description"] == DBNull.Value ? null : rd["Description"].ToString(),
+                                Status = rd["Status"].ToString(),
+                                DocumentPath = rd["DocumentPath"] == DBNull.Value ? null : rd["DocumentPath"].ToString(),
+                                ViolationReasons = rd["ViolationReasons"] == DBNull.Value ? null : rd["ViolationReasons"].ToString(),
+                                DateSubmitted = rd["DateSubmitted"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(rd["DateSubmitted"])
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error loading pending claims: " + ex.Message;
+            }
+
+            return View(list);
         }
 
         [HttpGet]
@@ -214,22 +261,74 @@ namespace CMCSPOE.Controllers
         }
 
         [HttpPost]
-        public IActionResult VerifyClaim(int ClaimId, string action)
+        public IActionResult ApproveClaims(int claimId)
         {
-            string newStatus = action == "Approve" ? "Approved" : "Rejected";
-
-            using (SqlConnection con = db.GetConnection())
+            var role = HttpContext.Session.GetString("Role");
+            if (role != null || (role != "Programme Coordinator" && role != "Academic Manager"))
             {
-                con.Open();
-                string updateQuery = "UPDATE Claims SET ClaimStatus = @Status WHERE ClaimId = @ClaimId";
-                SqlCommand cmd = new SqlCommand(updateQuery, con);
-                cmd.Parameters.AddWithValue("@Status", newStatus);
-                cmd.Parameters.AddWithValue("@ClaimId", ClaimId);
-                cmd.ExecuteNonQuery();
+                TempData["Error"] = "Unauthorized access.";
+                return RedirectToAction("VerifyClaims");
+            }
+            try
+            {
+                using (var conn = db.GetConnection())
+                {
+                    conn.Open();
+                    using (var cmd = new SqlCommand("sp_ApproveClaim", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@ClaimId", claimId);
+                        cmd.Parameters.AddWithValue("@ApprovedBy", HttpContext.Session.GetString("FullName") ?? "System");
+                        cmd.Parameters.AddWithValue("@Comments", "Approved via coordinator panel");
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                TempData["Success"] = "Claim approved.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error approving claim: " + ex.Message;
             }
 
-            TempData["Message"] = $"Claim #{ClaimId} has been {newStatus.ToLower()} successfully.";
-            return RedirectToAction("ApproveClaim");
+            return RedirectToAction("VerifyClaims");
+        }
+
+        // POST: /Claim/RejectClaim
+        [HttpPost]
+        public IActionResult RejectClaim(int claimId, string comment)
+        {
+            var role = HttpContext.Session.GetString("Role");
+            if (role == null || (role != "Programme Coordinator" && role != "Academic Manager"))
+            {
+                TempData["Error"] = "Unauthorized.";
+                return RedirectToAction("VerifyClaims");
+            }
+
+            try
+            {
+                using (var conn = db.GetConnection())
+                {
+                    conn.Open();
+                    using (var cmd = new SqlCommand("sp_RejectClaim", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@ClaimId", claimId);
+                        cmd.Parameters.AddWithValue("@ApprovedBy", HttpContext.Session.GetString("FullName") ?? "System");
+                        cmd.Parameters.AddWithValue("@Comments", comment ?? "Rejected");
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                TempData["Success"] = "Claim rejected.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error rejecting claim: " + ex.Message;
+            }
+
+            return RedirectToAction("VerifyClaims");
+
         }
     }
 }

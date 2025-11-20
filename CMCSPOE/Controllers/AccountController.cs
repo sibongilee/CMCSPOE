@@ -17,7 +17,7 @@ namespace CMCSPOE.Controllers
         }
 
         [HttpPost]
-        public IActionResult Login(string email, string password)
+        public IActionResult Login(string email, string PasswordHash)
         {
             if (!ModelState.IsValid)
             {
@@ -34,7 +34,7 @@ namespace CMCSPOE.Controllers
                     using (SqlCommand cmd = new SqlCommand(query, con))
                     {
                         cmd.Parameters.AddWithValue("@Email", email);
-                        cmd.Parameters.AddWithValue("@PasswordHash", password);
+                        cmd.Parameters.AddWithValue("@PasswordHash", PasswordHash);
                         using (SqlDataReader reader = cmd.ExecuteReader())
                         {
                             if (reader.Read())

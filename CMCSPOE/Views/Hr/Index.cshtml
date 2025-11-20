@@ -3,7 +3,7 @@
 	ViewData["Title"] = "HR Reports";
 }
 <h2 class="mb-4">HR Approved Claims Summary</h2>
-<a class="btn btn-primary mb-3" asp-action="DownloadReport(CSV)"></a>
+<a class="btn btn-primary mb-3" asp-controller="Hr" asp-action="DownloadReport" >Download CSV Report</a>
 
 <table class="table table-dark table-striped table-bordered shadow">
 	<thead>

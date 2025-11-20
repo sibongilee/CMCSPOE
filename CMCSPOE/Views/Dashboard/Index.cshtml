@@ -5,11 +5,11 @@
 }
 
 <h1>Welcome to Lecturer Dashboard</h1>
-<p>You are logged in as: @TempData["User"]</p>
+<p>You are logged in as: @TempData["UserName"]</p>
 <div class="container mt-4 p-4 bg-dark rounded shadow">
     <h2 class="text-info">Lecturer Dashboard</h2>
 
-    <div class="dashboard-container">
+    <div class="dashboard-wrapper">
         <a class="btn btn-info w-100 mb-3" asp-controller="Claim" asp-action="SubmitClaim">
             ➤ Submit Claim
         </a>
@@ -21,6 +21,7 @@
         <a class="btn btn-light w-100" asp-controller="Claim" asp-action="UploadDocuments">
             ➤ Upload Supporting Documents
         </a>
+
     </div>
 </div>
 

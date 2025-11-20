@@ -1,36 +1,84 @@
-﻿@model IEnumerable<CMCSPOE.Models.Claim>
+﻿@model List<CMCSPOE.Models.Claim>
 {
     ViewData["Title"] = "Verify Claims";
 }
 
 <h2 class="text-center text-primary mb-4">Verify Submitted Claims</h2>
-
-<table class="table table-bordered table-hover">
-    <thead class="table-dark">
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Warning"] != null)
+{
+    <div class="alert alert-warning">@TempData["Warning"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+<table class="table table-dark table-striped">
+    <thead>
         <tr>
-            <th>Lecturer</th>
+            <th>Claim ID</th>
+            <th>Lecturer ID</th>
             <th>Hours</th>
-            <th>Total</th>
-            <th>Notes</th>
-            <th>Action</th>
+            <th>Rate (R)</th>
+            <th>Total (R)</th>
+            <th>Violations</th>
+            <th>Document</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var claim in Model)
+        @if (Model != null && Model.Count > 0)
+        {
+            foreach (var claim in Model)
+            {
+                <tr>
+                    <td>@claim.ClaimId</td>
+                    <td>@claim.LecturerId</td>
+                    <td>@claim.HoursWorked</td>
+                    <td>@claim.HourlyRate</td>
+                    <td>@claim.TotalAmount</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(claim.ViolationReasons))
+                        {
+                            <div class="text-warning">@claim.ViolationReasons</div>
+                        }
+                        else
+                        {
+                            <div class="text-success">No violations</div>
+                        }
+                    </td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(claim.DocumentPath))
+                        {
+                            <a class="btn btn-sm btn-info" target="_blank" href="~/uploads/@claim.DocumentPath">View</a>
+                        }
+                        else
+                        {
+                            <span class="text-secondary">None</span>
+                        }
+                    </td>
+                    <td>
+                        <form asp-action="ApproveClaim" method="post" class="d-inline">
+                            <input type="hidden" name="claimId" value="@claim.ClaimId" />
+                            <button class="btn btn-success btn-sm" type="submit">Approve</button>
+                        </form>
+
+                        <form asp-action="RejectClaim" method="post" class="d-inline ms-1">
+                            <input type="hidden" name="claimId" value="@claim.ClaimId" />
+                            <input type="text" name="comment" placeholder="Comment (optional)" class="form-control form-control-sm d-inline-block w-50" />
+                            <button class="btn btn-danger btn-sm" type="submit">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        }
+        else
         {
             <tr>
-                <td>@claim.LecturerId</td>
-                <td>@claim.HoursWorked</td>
-                <td>R @claim.HourlyRate</td>
-                <td>R @(claim.HoursWorked * claim.HourlyRate)</td>
-                <td>@claim.Notes</td>
-                <td>
-                    <form asp-action="Approve" method="post" style="display:inline;">
-                        <input type="hidden" name="claimId" value="@claim.ClaimId" />
-                        <button type="submit" name="actionType" value="Approve" class="btn btn-success btn-sm">Approve</button>
-                        <button type="submit" name="actionType" value="Reject" class="btn btn-danger btn-sm">Reject</button>
-                    </form>
-                </td>
+                <td colspan="8" class="text-center text-secondary">No pending or flagged claims found.</td>
             </tr>
         }
     </tbody>

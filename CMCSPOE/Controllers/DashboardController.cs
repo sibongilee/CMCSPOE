@@ -14,9 +14,14 @@ namespace CMCSPOE.Controllers
     {
         public IActionResult Index()
         {
-            if (TempData["User_Id"] == null)
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+            {
                 return RedirectToAction("Login", "Account");
+
+            }
             return View();
         }
     }
+
 }
