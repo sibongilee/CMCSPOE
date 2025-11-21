@@ -1,4 +1,7 @@
-﻿using System.Data.SqlClient;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Globalization;
 using System.Text;
 using CMCSPOE.Data;
 using CMCSPOE.Models;
@@ -10,35 +13,42 @@ namespace CMCSPOE.Controllers
     {
         public IActionResult Index()
         {
-            List<HrReport> reports = new List<HrReport>();
-            DatabaseConnection db = new DatabaseConnection();
+            var reports = new List<HrReport>();
+            var db = new DatabaseConnection();
 
             using (SqlConnection conn = db.GetConnection())
             {
                 conn.Open();
                 string query = @"
-                    SELECT c.ClaimID, l.FullName, c.HoursWorked, c.HourlyRate,
-                           (c.HoursWorked * c.HourlyRate) AS FinalAmount,
-                           c.ApprovedDate
+                    SELECT 
+                        c.ClaimId,
+                        l.FullName,
+                        c.HoursWorked,
+                        COALESCE(c.HourlyRate, c.RatePerHour) AS HourlyRate,
+                        COALESCE(c.TotalAmount, (c.HoursWorked * COALESCE(c.HourlyRate, c.RatePerHour))) AS TotalAmount,
+                        c.ApprovedDate,
+                        COALESCE(c.ApprovedBy, '') AS ApprovedBy,
+                        COALESCE(c.Comments, c.ViolationReasons, '') AS Comments
                     FROM Claims c
-                    INNER JOIN Lecturers l ON c.LecturerID = l.LecturerID
-                    WHERE c.Status = 'Approved'
-                ";
+                    INNER JOIN Lecturers l ON c.LecturerId = l.LecturerId
+                    WHERE COALESCE(c.Status, c.ClaimStatus) = 'Approved'
+                    ORDER BY c.ApprovedDate DESC";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
+                using (var reader = cmd.ExecuteReader())
                 {
-                    SqlDataReader reader = cmd.ExecuteReader();
-
                     while (reader.Read())
                     {
                         reports.Add(new HrReport
                         {
-                            ClaimId = (int)reader["ClaimID"],
-                            LecturerName = reader["FullName"].ToString(),
-                            HoursWorked = Convert.ToDecimal(reader["HoursWorked"]),
-                            HourlyRate = Convert.ToDecimal(reader["HourlyRate"]),
-                            TotalAmount = Convert.ToDecimal(reader["FinalAmount"]),
-                            ApprovedDate = Convert.ToDateTime(reader["ApprovedDate"])
+                            ClaimId = reader["ClaimId"] != DBNull.Value ? Convert.ToInt32(reader["ClaimId"]) : 0,
+                            LecturerName = reader["FullName"] != DBNull.Value ? reader["FullName"].ToString() : null,
+                            HoursWorked = reader["HoursWorked"] != DBNull.Value ? Convert.ToDecimal(reader["HoursWorked"]) : 0m,
+                            HourlyRate = reader["HourlyRate"] != DBNull.Value ? Convert.ToDecimal(reader["HourlyRate"]) : 0m,
+                            TotalAmount = reader["TotalAmount"] != DBNull.Value ? Convert.ToDecimal(reader["TotalAmount"]) : 0m,
+                            ApprovedDate = reader["ApprovedDate"] != DBNull.Value ? Convert.ToDateTime(reader["ApprovedDate"]) : (DateTime?)null,
+                            ApprovedBy = reader["ApprovedBy"] != DBNull.Value ? reader["ApprovedBy"].ToString() : null,
+                            Comments = reader["Comments"] != DBNull.Value ? reader["Comments"].ToString() : null
                         });
                     }
                 }
@@ -50,41 +60,57 @@ namespace CMCSPOE.Controllers
         // Download CSV Report
         public IActionResult DownloadReport()
         {
-            StringBuilder csv = new StringBuilder();
+            var sb = new StringBuilder();
+            sb.AppendLine("ClaimId,Lecturer,HoursWorked,HourlyRate,TotalAmount,ApprovedDate,ApprovedBy,Comments");
 
-            csv.AppendLine("ClaimID,Lecturer,HoursWorked,HourlyRate,FinalAmount,ApprovedDate");
-
-            DatabaseConnection db = new DatabaseConnection();
+            var db = new DatabaseConnection();
 
             using (SqlConnection conn = db.GetConnection())
             {
                 conn.Open();
                 string query = @"
-                    SELECT c.ClaimID, l.FullName, c.HoursWorked, c.HourlyRate,
-                           (c.HoursWorked * c.HourlyRate) AS FinalAmount,
-                           c.ApprovedDate
+                    SELECT 
+                        c.ClaimId,
+                        l.FullName,
+                        c.HoursWorked,
+                        COALESCE(c.HourlyRate, c.RatePerHour) AS HourlyRate,
+                        COALESCE(c.TotalAmount, (c.HoursWorked * COALESCE(c.HourlyRate, c.RatePerHour))) AS TotalAmount,
+                        c.ApprovedDate,
+                        COALESCE(c.ApprovedBy, '') AS ApprovedBy,
+                        COALESCE(c.Comments, c.ViolationReasons, '') AS Comments
                     FROM Claims c
-                    INNER JOIN Lecturers l ON c.LecturerID = l.LecturerID
-                    WHERE c.Status = 'Approved'
-                ";
+                    INNER JOIN Lecturers l ON c.LecturerId = l.LecturerId
+                    WHERE COALESCE(c.Status, c.ClaimStatus) = 'Approved'
+                    ORDER BY c.ApprovedDate DESC";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
+                using (var reader = cmd.ExecuteReader())
                 {
-                    SqlDataReader r = cmd.ExecuteReader();
-
-                    while (r.Read())
+                    while (reader.Read())
                     {
-                        csv.AppendLine(
-                            $"{r["ClaimID"]}," +
-                            $"{r["FullName"]}" +
-                            $",{r["HoursWorked"]}," +
-                            $"{r["HourlyRate"]},{r["TotalAmount"]},{r["ApprovedDate"]}"
+                        string Escape(object? value)
+                        {
+                            if (value == null || value == DBNull.Value) return "";
+                            var s = Convert.ToString(value, CultureInfo.InvariantCulture) ?? "";
+                            if (s.Contains('"')) s = s.Replace("\"", "\"\"");
+                            if (s.Contains(',') || s.Contains('"') || s.Contains('\n') || s.Contains('\r'))
+                                return $"\"{s}\"";
+                            return s;
+                        }
+
+                        string approvedDate = reader["ApprovedDate"] != DBNull.Value
+                            ? ((DateTime)reader["ApprovedDate"]).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+                            : "";
+
+                        sb.AppendLine(
+                            $"{Escape(reader["ClaimId"])},{Escape(reader["FullName"])},{Escape(reader["HoursWorked"])},{Escape(reader["HourlyRate"])},{Escape(reader["TotalAmount"])},{Escape(approvedDate)},{Escape(reader["ApprovedBy"])},{Escape(reader["Comments"])}"
                         );
                     }
                 }
             }
 
-            return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", "HR_ApprovedClaims_Report.csv");
+            var bytes = Encoding.UTF8.GetBytes(sb.ToString());
+            return File(bytes, "text/csv; charset=utf-8", "HR_ApprovedClaims_Report.csv");
         }
     }
 }

@@ -1,8 +1,28 @@
-﻿@model CMCSPOE.Models.User;
+﻿@model CMCSPOE.Models.User
 @{
-	ViewData["Title"] = "Dashboard";
-	var userRole = TempData["user_Role"]?.ToString();
-	var userName = TempData["user_Name"]?.ToString();
+    ViewData["Title"] = "Dashboard";
+    var userRole = TempData["user_Role"]?.ToString() ?? Context.Session.GetString("Role");
+    var userName = TempData["user_Name"]?.ToString() ?? Context.Session.GetString("FullName");
+
+    Func<string[], bool> IsInRole = roles =>
+    {
+        if (string.IsNullOrWhiteSpace(userRole)) return false;
+        var ur = userRole.Trim();
+        foreach (var r in roles)
+        {
+            if (string.Equals(ur, r, System.StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(ur.Replace(" ", ""), r.Replace(" ", ""), System.StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    var IsLecturer = IsInRole(new[] { "Lecturer" });
+    var IsProgramCoordinator = IsInRole(new[] { "Programme Coordinator", "Program Coordinator", "ProgramCoordinator" });
+    var IsAcademicManager = IsInRole(new[] { "Academic Manager", "AcademicManager" });
+    var IsHr = IsInRole(new[] { "HR", "Hr" });
 }
 
 <div class="dashboard-container">
@@ -14,50 +34,74 @@
 
         <div class="dashboard-grid" role="list">
 
-            <!-- Lecturer panel -->
-            <div class="dashboard-card" role="listitem" aria-labelledby="lecturer-title">
-                <div>
-                    <h3 id="lecturer-title">Lecturer Panel</h3>
-                    <p>View and manage lecturer profiles, departments and assignments.</p>
+            @* Lecturer panel (create/list) visible to coordinators and admins *@
+            @if (IsProgramCoordinator || IsAcademicManager)
+            {
+                <div class="dashboard-card" role="listitem" aria-labelledby="lecturer-title">
+                    <div>
+                        <h3 id="lecturer-title">Lecturer Panel</h3>
+                        <p>Manage lecturer profiles and department assignments.</p>
+                    </div>
+                    <div class="card-actions">
+                        <a asp-controller="Lecturer" asp-action="Create" class="btn btn-outline" title="Add New Lecturer">Add Lecturer</a>
+                        <a asp-controller="Lecturer" asp-action="LecturerList" class="btn btn-primary" title="View Lecturer List">View Lecturer List</a>
+                    </div>
                 </div>
-                <div class="card-actions">
-                    <a asp-controller="Lecturer" asp-action="Index" class="btn btn-primary"
-                        title="Open Lecturer Panel">Open Panel</a>
-                    <a asp-controller="Lecturer" asp-action="Create" class="btn btn-outline"
-                        title="Add New Lecturer">Add Lecturer</a>
-                </div>
-            </div>
+            }
 
-            <!-- Claims: submit / view -->
-            <div class="dashboard-card" role="listitem" aria-labelledby="claims-title">
-                <div>
-                    <h3 id="claims-title">Claims</h3>
-                    <p>Submit new claims and review existing claim status and approvals.</p>
+            @* Claims: lecturer actions *@
+            @if (IsLecturer)
+            {
+                <div class="dashboard-card" role="listitem" aria-labelledby="claims-title">
+                    <div>
+                        <h3 id="claims-title">Claims</h3>
+                        <p>Submit new claims and review existing claim status and approvals.</p>
+                    </div>
+                    <div class="card-actions">
+                        <a asp-controller="Claim" asp-action="SubmitClaim" class="btn btn-primary" title="Submit a new claim">Submit Claim</a>
+                        <a asp-controller="Claim" asp-action="ViewClaims" class="btn btn-outline" title="View submitted claims">View Claims</a>
+                        <a asp-controller="Claim" asp-action="UploadDocuments" asp-route-id="0" class="btn btn-outline-secondary" title="Upload supporting documents">Upload Document</a>
+                    </div>
                 </div>
-                <div class="card-actions">
-                    <a asp-controller="Claim" asp-action="SubmitClaim" class="btn btn-primary"
-                        title="Submit a new claim">Submit Claim</a>
-                    <a asp-controller="Claim" asp-action="ViewClaims" class="btn btn-outline"
-                        title="View submitted claims">View Claims</a>
-                </div>
-            </div>
+            }
 
-            <!-- Documents: upload / view -->
-            <div class="dashboard-card" role="listitem" aria-labelledby="docs-title">
-                <div>
-                    <h3 id="docs-title">Documents</h3>
-                    <p>Upload supporting documents to claims and manage uploaded files.</p>
+            @* Documents: coordinators verify, lecturers upload (also show to both) *@
+            @if (IsLecturer || IsProgramCoordinator)
+            {
+                <div class="dashboard-card" role="listitem" aria-labelledby="docs-title">
+                    <div>
+                        <h3 id="docs-title">Documents</h3>
+                        <p>Upload or verify supporting documents depending on your role.</p>
+                    </div>
+                    <div class="card-actions">
+                        @if (IsLecturer)
+                        {
+                            <a asp-controller="Claim" asp-action="UploadDocuments" asp-route-id="0" class="btn btn-primary" title="Upload a document">Upload Document</a>
+                        }
+                        @if (IsProgramCoordinator)
+                        {
+                            <a asp-controller="Claim" asp-action="VerifyClaims" class="btn btn-outline" title="Verify uploaded documents">Verify Documents</a>
+                        }
+                    </div>
                 </div>
-                <div class="card-actions">
-                    <a asp-controller="Claim" asp-action="UploadDocuments" class="btn btn-primary"
-                        title="Upload a document">Upload Document</a>
-                    <a asp-controller="Claim" asp-action="VerifyClaims" class="btn btn-outline"
-                        title="Verify uploaded documents">Verify Documents</a>
-                </div>
-            </div>
+            }
 
-            <!-- HR Reports card -->
-            @if (userRole == "HR")
+            @* Verification / Approval for coordinators and academic managers *@
+            @if (IsProgramCoordinator || IsAcademicManager)
+            {
+                <div class="dashboard-card" role="listitem" aria-labelledby="verify-title">
+                    <div>
+                        <h3 id="verify-title">Verify & Approve</h3>
+                        <p>View pending claims, verify documents and approve or reject as needed.</p>
+                    </div>
+                    <div class="card-actions">
+                        <a asp-controller="Claim" asp-action="VerifyClaims" class="btn btn-primary" title="View pending claims">Verify Claims</a>
+                    </div>
+                </div>
+            }
+
+            @* HR reports *@
+            @if (IsHr)
             {
                 <div class="dashboard-card" role="listitem" aria-labelledby="reports-title">
                     <div>
@@ -65,10 +109,8 @@
                         <p>Generate HR payout reports and export approved claim summaries.</p>
                     </div>
                     <div class="card-actions">
-                        <a asp-controller="Hr" asp-action="Index" class="btn btn-primary"
-                            title="Open HR Reports">Open Reports</a>
-                        <a asp-controller="Hr" asp-action="Download" class="btn btn-outline"
-                            title="Download report">Download</a>
+                        <a asp-controller="Hr" asp-action="Index" class="btn btn-primary" title="Open HR Reports">Open Reports</a>
+                        <a asp-controller="Hr" asp-action="DownloadReport" class="btn btn-outline" title="Download CSV">Download</a>
                     </div>
                 </div>
             }
@@ -76,4 +118,3 @@
         </div>
     </div>
 </div>
-

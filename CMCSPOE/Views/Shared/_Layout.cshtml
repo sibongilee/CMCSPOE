@@ -1,9 +1,8 @@
 ﻿@{
-    // tolerant retrieval of user identity values (handles varying keys used across the app)
-    var userName = TempData["Username"] ?? TempData["user_Name"] ?? TempData["userName"];
-    var userRole = TempData["UserRole"] ?? TempData["user_Role"] ?? TempData["userRole"];
+    // tolerant retrieval of user identity values
+    var userName = TempData["Username"] ?? TempData["user_Name"] ?? TempData["userName"] ?? Context.Session.GetString("FullName");
+    var userRole = TempData["UserRole"] ?? TempData["user_Role"] ?? TempData["userRole"] ?? Context.Session.GetString("Role");
 
-    // helper to mark the active nav link
     string IsActive(string controller, string action = "Index")
     {
         var routeController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
@@ -13,8 +12,6 @@
             ? "active"
             : string.Empty;
     }
-
-    var currentUrl = Context.Request.Path + Context.Request.QueryString;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -112,7 +109,8 @@
                                 <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
                                 <li><hr class="dropdown-divider" /></li>
                                 <li><a class="dropdown-item" asp-controller="Claim" asp-action="SubmitClaim">Submit Claim</a></li>
-                                <li><a class="dropdown-item" asp-controller="Claim" asp-action="UploadDocuments">Upload Document</a></li>
+                                <li><a class="dropdown-item" asp-controller="Claim" asp-action="ViewClaims">My Claims</a></li>
+                                <li><a class="dropdown-item" asp-controller="Claim" asp-action="UploadDocuments" asp-route-id="0">Upload Document</a></li>
                                 <li><hr class="dropdown-divider" /></li>
                                 <li><a class="dropdown-item" asp-controller="Account" asp-action="Logout">Logout</a></li>
                             </ul>

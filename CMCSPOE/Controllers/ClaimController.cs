@@ -1,5 +1,5 @@
 ﻿using System;
-    using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
@@ -9,18 +9,26 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 
 namespace CMCSPOE.Controllers
 {
     [AllowAnonymous]
     public class ClaimController : Controller
     {
+        // Keep using the helper, consider DI later for testability
         private readonly DatabaseConnection db = new DatabaseConnection();
         private readonly IWebHostEnvironment _env;
+
         public ClaimController(IWebHostEnvironment env)
         {
             _env = env;
+        }
+
+        // compatibility route: /Claim/AP -> redirect to SubmitClaim
+        [HttpGet]
+        public IActionResult AP()
+        {
+            return RedirectToAction(nameof(SubmitClaim));
         }
 
         // Submit Claim (Lecturer)
@@ -33,9 +41,13 @@ namespace CMCSPOE.Controllers
         [HttpPost]
         public IActionResult SubmitClaim(Claim claim)
         {
+            if (!ModelState.IsValid)
+            {
+                return View(claim);
+            }
+
             try
             {
-                // 1) Get current logged-in user id from session
                 var loggedInUserId = HttpContext.Session.GetInt32("UserId");
                 if (loggedInUserId == null)
                 {
@@ -49,7 +61,7 @@ namespace CMCSPOE.Controllers
                 {
                     con.Open();
 
-                    // 2) Try find LecturerId for this user
+                    // Try find LecturerId for this user (supports table name 'Lecturers')
                     using (SqlCommand cmdFind = new SqlCommand(
                         "SELECT TOP 1 LecturerId FROM Lecturers WHERE UserId = @UserId", con))
                     {
@@ -61,8 +73,7 @@ namespace CMCSPOE.Controllers
                         }
                         else
                         {
-                            // 3) Lecturer entry not found -> create new Lecturer record using User info
-                            //    Fetch user fullname and email from Users table
+                            // Lecturer not found -> create using data from Users table
                             string userFullName = "";
                             string userEmail = "";
 
@@ -80,7 +91,6 @@ namespace CMCSPOE.Controllers
                                 }
                             }
 
-                            // Insert new lecturer
                             using (SqlCommand cmdInsertLect = new SqlCommand(
                                 "INSERT INTO Lecturers (UserId, LecturerName, Email, Department) " +
                                 "VALUES (@UserId, @LecturerName, @Email, @Department); SELECT SCOPE_IDENTITY();", con))
@@ -91,12 +101,13 @@ namespace CMCSPOE.Controllers
                                 cmdInsertLect.Parameters.AddWithValue("@Department", (object)DBNull.Value);
 
                                 var newIdObj = cmdInsertLect.ExecuteScalar();
-                                lecturerId = Convert.ToInt32(newIdObj);
+                                // SCOPE_IDENTITY() returns decimal -> convert safely
+                                lecturerId = Convert.ToInt32(Convert.ToDecimal(newIdObj));
                             }
                         }
                     }
 
-                    // 4) Now insert the claim with the confirmed lecturerId
+                    // Insert the claim with the confirmed lecturerId
                     string sql = @"INSERT INTO Claims 
                     (LecturerId, HoursWorked, HourlyRate, Notes, Status, DateSubmitted)
                     VALUES (@LecturerId, @HoursWorked, @HourlyRate, @Notes, 'Pending', GETDATE())";
@@ -106,25 +117,25 @@ namespace CMCSPOE.Controllers
                         cmd.Parameters.AddWithValue("@LecturerId", lecturerId);
                         cmd.Parameters.AddWithValue("@HoursWorked", claim.HoursWorked);
                         cmd.Parameters.AddWithValue("@HourlyRate", claim.HourlyRate);
-                        cmd.Parameters.AddWithValue("@Notes", claim.Notes ?? (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@Notes", string.IsNullOrWhiteSpace(claim.Notes) ? (object)DBNull.Value : claim.Notes);
 
                         cmd.ExecuteNonQuery();
                     }
                 }
 
                 TempData["Success"] = "Claim submitted successfully!";
-                return RedirectToAction("ViewClaims");
+                // Redirect to dashboard after successful submit
+                return RedirectToAction("Index", "Dashboard");
             }
             catch (Exception ex)
             {
                 TempData["Error"] = "Error submitting claim: " + ex.Message;
                 return View(claim);
-
             }
         }
 
         [HttpGet]
-        public IActionResult UploadDocuments(int id)
+        public IActionResult UploadDocuments(int id = 0)
         {
             ViewBag.ClaimId = id;
             return View();
@@ -134,11 +145,10 @@ namespace CMCSPOE.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult UploadDocuments(int claimId, IFormFile document)
         {
-            // document will be null if the form input name doesn't match the parameter name.
             if (document == null || document.Length == 0)
             {
                 TempData["Error"] = "Please select a file.";
-                ViewBag.ClaimId = claimId; // ensure view keeps claim id on error
+                ViewBag.ClaimId = claimId;
                 return View();
             }
 
@@ -159,11 +169,16 @@ namespace CMCSPOE.Controllers
                     document.CopyTo(stream);
                 }
 
-                // save file name to DB
+                // save file name to DB (support both DocumentPath or SupportingDocument columns)
                 using (SqlConnection con = db.GetConnection())
                 {
                     con.Open();
-                    string sql = "UPDATE Claims SET DocumentPath=@Document WHERE ClaimId=@ClaimId";
+                    // Update both common column names to be defensive
+                    string sql = @"
+                        UPDATE Claims
+                        SET DocumentPath = @Document,
+                            SupportingDocument = @Document
+                        WHERE ClaimId = @ClaimId";
 
                     using (SqlCommand cmd = new SqlCommand(sql, con))
                     {
@@ -174,7 +189,8 @@ namespace CMCSPOE.Controllers
                 }
 
                 TempData["Success"] = "Document uploaded successfully!";
-                return RedirectToAction("ViewClaims");
+                // Redirect to dashboard after successful upload
+                return RedirectToAction("Index", "Dashboard");
             }
             catch (Exception ex)
             {
@@ -194,22 +210,39 @@ namespace CMCSPOE.Controllers
                 int? userId = HttpContext.Session.GetInt32("UserId");
                 if (userId == null) return RedirectToAction("Login", "Account");
 
-                // Map user -> lecturer id
+                // Map user -> lecturer id (use Lecturers table)
                 int lecturerId = 0;
                 using (var con = db.GetConnection())
                 {
                     con.Open();
-                    using (var cmd = new SqlCommand("SELECT TOP 1 LecturerId FROM Lecturer WHERE UserId = @UserId", con))
+                    using (var cmd = new SqlCommand("SELECT TOP 1 LecturerId FROM Lecturers WHERE UserId = @UserId", con))
                     {
                         cmd.Parameters.AddWithValue("@UserId", userId.Value);
                         var r = cmd.ExecuteScalar();
-                        if (r == null) { ViewBag.Error = "Lecturer profile not found.";
+                        if (r == null)
+                        {
+                            ViewBag.Error = "Lecturer profile not found.";
                             return View(list);
                         }
                         lecturerId = Convert.ToInt32(r);
                     }
 
-                    string sql = "SELECT * FROM Claims WHERE LecturerId = @LecturerId ORDER BY DateSubmitted DESC";
+                    string sql = @"
+                        SELECT 
+                            c.ClaimId,
+                            c.LecturerId,
+                            c.HoursWorked,
+                            COALESCE(c.HourlyRate, c.RatePerHour) AS HourlyRate,
+                            COALESCE(c.TotalAmount, 0) AS TotalAmount,
+                            COALESCE(c.Notes, c.Description) AS Notes,
+                            COALESCE(c.Status, c.ClaimStatus) AS Status,
+                            COALESCE(c.DocumentPath, c.SupportingDocument) AS DocumentPath,
+                            COALESCE(c.ViolationReasons, c.Remarks) AS ViolationReasons,
+                            c.DateSubmitted
+                        FROM Claims c
+                        WHERE c.LecturerId = @LecturerId
+                        ORDER BY c.DateSubmitted DESC";
+
                     using (var cmd = new SqlCommand(sql, con))
                     {
                         cmd.Parameters.AddWithValue("@LecturerId", lecturerId);
@@ -219,13 +252,13 @@ namespace CMCSPOE.Controllers
                             {
                                 list.Add(new Claim
                                 {
-                                    ClaimId = Convert.ToInt32(rd["ClaimId"]),
-                                    LecturerId = Convert.ToInt32(rd["LecturerId"]),
-                                    HoursWorked = Convert.ToInt32(rd["HoursWorked"]),
-                                    HourlyRate = Convert.ToDecimal(rd["HourlyRate"]),
+                                    ClaimId = rd["ClaimId"] == DBNull.Value ? 0 : Convert.ToInt32(rd["ClaimId"]),
+                                    LecturerId = rd["LecturerId"] == DBNull.Value ? 0 : Convert.ToInt32(rd["LecturerId"]),
+                                    HoursWorked = rd["HoursWorked"] == DBNull.Value ? 0 : Convert.ToInt32(rd["HoursWorked"]),
+                                    HourlyRate = rd["HourlyRate"] == DBNull.Value ? 0 : Convert.ToDecimal(rd["HourlyRate"]),
                                     TotalAmount = rd["TotalAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(rd["TotalAmount"]),
-                                    Notes = rd["Description"] == DBNull.Value ? null : rd["Description"].ToString(),
-                                    Status = rd["Status"].ToString(),
+                                    Notes = rd["Notes"] == DBNull.Value ? null : rd["Notes"].ToString(),
+                                    Status = rd["Status"] == DBNull.Value ? null : rd["Status"].ToString(),
                                     DocumentPath = rd["DocumentPath"] == DBNull.Value ? null : rd["DocumentPath"].ToString(),
                                     ViolationReasons = rd["ViolationReasons"] == DBNull.Value ? null : rd["ViolationReasons"].ToString(),
                                     DateSubmitted = rd["DateSubmitted"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(rd["DateSubmitted"])
@@ -246,7 +279,6 @@ namespace CMCSPOE.Controllers
         // GET: /Claim/VerifyClaims  (for Coordinators / Managers)
         public IActionResult VerifyClaims()
         {
-            // case-insensitive role check and null-safe
             var role = HttpContext.Session.GetString("Role");
             if (string.IsNullOrEmpty(role) ||
                 !(role.Equals("Programme Coordinator", StringComparison.OrdinalIgnoreCase)
@@ -263,25 +295,23 @@ namespace CMCSPOE.Controllers
                 {
                     conn.Open();
 
-                    // Select explicit columns and avoid ambiguous names
                     string sql = @"
                         SELECT 
                             c.ClaimId,
                             c.LecturerId,
                             c.HoursWorked,
-                            c.HourlyRate,
-                            c.TotalAmount,
-                            -- try both possible text columns; prefer Notes
-                            ISNULL(c.Notes, c.Description) AS Notes,
-                            c.Status,
-                            c.DocumentPath,
-                            c.ViolationReasons,
+                            COALESCE(c.HourlyRate, c.RatePerHour) AS HourlyRate,
+                            COALESCE(c.TotalAmount, 0) AS TotalAmount,
+                            COALESCE(c.Notes, c.Description) AS Notes,
+                            COALESCE(c.Status, c.ClaimStatus) AS Status,
+                            COALESCE(c.DocumentPath, c.SupportingDocument) AS DocumentPath,
+                            COALESCE(c.ViolationReasons, c.Remarks) AS ViolationReasons,
                             c.DateSubmitted,
                             u.FullName AS LecturerName
                         FROM Claims c
-                        JOIN Lecturer l ON c.LecturerId = l.LecturerId
+                        JOIN Lecturers l ON c.LecturerId = l.LecturerId
                         JOIN Users u ON l.UserId = u.UserId
-                        WHERE c.Status IN ('Pending','Flagged')
+                        WHERE c.Status IN ('Pending','Flagged') OR c.ClaimStatus IN ('Pending','Flagged')
                         ORDER BY c.DateSubmitted DESC";
 
                     using (var cmd = new SqlCommand(sql, conn))
@@ -314,7 +344,6 @@ namespace CMCSPOE.Controllers
                 TempData["Error"] = "Error loading pending claims: " + ex.Message;
             }
 
-            // Ensure view file name matches: Views/Claim/VerifyClaims.cshtml
             return View("VerifyClaims", list);
         }
 
@@ -326,39 +355,60 @@ namespace CMCSPOE.Controllers
             using (SqlConnection con = db.GetConnection())
             {
                 con.Open();
-                string query = @"SELECT c.ClaimId, u.FullName, c.HoursWorked, c.RatePerHour, 
-                                c.TotalAmount, c.ClaimStatus, c.SupportingDocument, c.Remarks
-                         FROM Claims c
-                         JOIN Lecturers l ON c.LecturerId = l.LecturerId
-                         JOIN Users u ON l.UserId = u.UserId
-                         WHERE c.ClaimId = @ClaimId";
+                string query = @"
+                    SELECT 
+                        c.ClaimId,
+                        c.HoursWorked,
+                        COALESCE(c.HourlyRate, c.RatePerHour) AS HourlyRate,
+                        COALESCE(c.TotalAmount, 0) AS TotalAmount,
+                        COALESCE(c.Notes, c.Description) AS Notes,
+                        COALESCE(c.Status, c.ClaimStatus) AS Status,
+                        COALESCE(c.DocumentPath, c.SupportingDocument) AS DocumentPath,
+                        COALESCE(c.ViolationReasons, c.Remarks) AS ViolationReasons
+                    FROM Claims c
+                    WHERE c.ClaimId = @ClaimId";
 
-                SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@ClaimId", id);
-
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.Read())
+                using (SqlCommand cmd = new SqlCommand(query, con))
                 {
-                    claim.ClaimId = (int)reader["ClaimId"];
-                    claim.HoursWorked = (int)reader["HoursWorked"];
-                    claim.HourlyRate = (decimal)reader["RatePerHour"];
-                    claim.DocumentPath = reader["SupportingDocument"].ToString();
-                    claim.Status = reader["ClaimStatus"].ToString();
+                    cmd.Parameters.AddWithValue("@ClaimId", id);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            claim.ClaimId = reader["ClaimId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["ClaimId"]);
+                            claim.HoursWorked = reader["HoursWorked"] == DBNull.Value ? 0 : Convert.ToInt32(reader["HoursWorked"]);
+                            claim.HourlyRate = reader["HourlyRate"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["HourlyRate"]);
+                            claim.TotalAmount = reader["TotalAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["TotalAmount"]);
+                            claim.Notes = reader["Notes"] == DBNull.Value ? null : reader["Notes"].ToString();
+                            claim.Status = reader["Status"] == DBNull.Value ? null : reader["Status"].ToString();
+                            claim.DocumentPath = reader["DocumentPath"] == DBNull.Value ? null : reader["DocumentPath"].ToString();
+                            claim.ViolationReasons = reader["ViolationReasons"] == DBNull.Value ? null : reader["ViolationReasons"].ToString();
+                        }
+                    }
                 }
             }
 
             return View(claim);
         }
 
+        [HttpGet]
+        public IActionResult ApproveClaim()
+        {
+            return View();
+        }
+
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult ApproveClaims(int claimId)
         {
             var role = HttpContext.Session.GetString("Role");
-            if (role != null || (role != "Programme Coordinator" && role != "Academic Manager"))
+            // fixed role check (deny if null or not one of the allowed roles)
+            if (role == null || (role != "Programme Coordinator" && role != "Academic Manager"))
             {
                 TempData["Error"] = "Unauthorized access.";
                 return RedirectToAction("VerifyClaims");
             }
+
             try
             {
                 using (var conn = db.GetConnection())
@@ -381,11 +431,13 @@ namespace CMCSPOE.Controllers
                 TempData["Error"] = "Error approving claim: " + ex.Message;
             }
 
-            return RedirectToAction("VerifyClaims");
+            // Redirect to dashboard after approval
+            return RedirectToAction("Index", "Dashboard");
         }
 
         // POST: /Claim/RejectClaim
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult RejectClaim(int claimId, string comment)
         {
             var role = HttpContext.Session.GetString("Role");
@@ -405,7 +457,7 @@ namespace CMCSPOE.Controllers
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.AddWithValue("@ClaimId", claimId);
                         cmd.Parameters.AddWithValue("@ApprovedBy", HttpContext.Session.GetString("FullName") ?? "System");
-                        cmd.Parameters.AddWithValue("@Comments", comment ?? "Rejected");
+                        cmd.Parameters.AddWithValue("@Comments", string.IsNullOrWhiteSpace(comment) ? "Rejected" : comment);
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -417,8 +469,8 @@ namespace CMCSPOE.Controllers
                 TempData["Error"] = "Error rejecting claim: " + ex.Message;
             }
 
-            return RedirectToAction("VerifyClaims");
-
+            // Redirect to dashboard after rejection
+            return RedirectToAction("Index", "Dashboard");
         }
     }
 }

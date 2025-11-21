@@ -1,4 +1,7 @@
-﻿using System.Data.SqlClient;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
 using CMCSPOE.Data;
 using CMCSPOE.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -10,11 +13,6 @@ namespace CMCSPOE.Controllers
     public class LecturerController : Controller
     {
         private readonly DatabaseConnection db = new DatabaseConnection();
-
-        public IActionResult Index()
-        {
-            return View();
-        }
 
         [HttpGet]
         public IActionResult Create()
@@ -31,20 +29,21 @@ namespace CMCSPOE.Controllers
                 {
                     conn.Open();
 
-                    SqlCommand cmd = new SqlCommand(
-                        "INSERT INTO Lecturer (UserId, Department, HourlyRate) VALUES (@UserId, @Department, @Rate)",
-                        conn
-                    );
+                    using (var cmd = new SqlCommand(
+                        "INSERT INTO Lecturers (UserId, Department, HourlyRate) VALUES (@UserId, @Department, @Rate)",
+                        conn))
+                    {
+                        cmd.Parameters.AddWithValue("@UserId", model.UserId);
+                        cmd.Parameters.AddWithValue("@Department", (object?)model.Department ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@Rate", model.HourlyRate);
 
-                    cmd.Parameters.AddWithValue("@UserId", model.UserId);
-                    cmd.Parameters.AddWithValue("@Department", model.Department);
-                    cmd.Parameters.AddWithValue("@Rate", model.HourlyRate);
-
-                    cmd.ExecuteNonQuery();
+                        cmd.ExecuteNonQuery();
+                    }
                 }
 
                 TempData["Success"] = "Lecturer added successfully.";
-                return RedirectToAction("LecturerList");
+                // Redirect to dashboard after create
+                return RedirectToAction("Index", "Dashboard");
             }
             catch (Exception ex)
             {
@@ -58,31 +57,37 @@ namespace CMCSPOE.Controllers
         //==============================================
         public IActionResult LecturerList()
         {
-            List<Lecturers> list = new List<Lecturers>();
+            var list = new List<Lecturers>();
 
-            using (SqlConnection conn = db.GetConnection())
+            try
             {
-                conn.Open();
-
-                SqlCommand cmd = new SqlCommand(
-                    @"SELECT L.LecturerId, U.FullName, L.Department, L.HourlyRate 
-                      FROM Lecturer L 
-                      JOIN Users U ON L.UserId = U.UserId",
-                    conn
-                );
-
-                SqlDataReader dr = cmd.ExecuteReader();
-
-                while (dr.Read())
+                using (SqlConnection conn = db.GetConnection())
                 {
-                    list.Add(new Lecturers
+                    conn.Open();
+
+                    using (var cmd = new SqlCommand(
+                        @"SELECT L.LecturerId, U.FullName, L.Department, L.HourlyRate 
+                          FROM Lecturers L 
+                          JOIN Users U ON L.UserId = U.UserId
+                          ORDER BY U.FullName", conn))
+                    using (var dr = cmd.ExecuteReader())
                     {
-                        LecturerId = (int)dr["LecturerId"],
-                        FullName = dr["FullName"].ToString(),
-                        Department = dr["Department"].ToString(),
-                        HourlyRate = Convert.ToDecimal(dr["HourlyRate"])
-                    });
+                        while (dr.Read())
+                        {
+                            list.Add(new Lecturers
+                            {
+                                LecturerId = dr["LecturerId"] != DBNull.Value ? Convert.ToInt32(dr["LecturerId"]) : 0,
+                                FullName = dr["FullName"] != DBNull.Value ? dr["FullName"].ToString() : string.Empty,
+                                Department = dr["Department"] != DBNull.Value ? dr["Department"].ToString() : string.Empty,
+                                HourlyRate = dr["HourlyRate"] != DBNull.Value ? Convert.ToDecimal(dr["HourlyRate"]) : 0m
+                            });
+                        }
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Failed loading lecturers: " + ex.Message;
             }
 
             return View(list);
