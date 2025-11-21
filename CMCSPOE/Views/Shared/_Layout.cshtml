@@ -1,94 +1,176 @@
 ﻿@{
-	var userRole = TempData["userRole"]?.ToString();
-	var userName = TempData["userName"]?.ToString();
+    // tolerant retrieval of user identity values (handles varying keys used across the app)
+    var userName = TempData["Username"] ?? TempData["user_Name"] ?? TempData["userName"];
+    var userRole = TempData["UserRole"] ?? TempData["user_Role"] ?? TempData["userRole"];
+
+    // helper to mark the active nav link
+    string IsActive(string controller, string action = "Index")
+    {
+        var routeController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+        var routeAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+        return string.Equals(routeController, controller, StringComparison.OrdinalIgnoreCase)
+               && string.Equals(routeAction, action, StringComparison.OrdinalIgnoreCase)
+            ? "active"
+            : string.Empty;
+    }
+
+    var currentUrl = Context.Request.Path + Context.Request.QueryString;
 }
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>@ViewData["Title"] - CMCSPOE</title>
-	<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-	<link rel="stylesheet" href="~/CMCSPOE.styles.css" asp-append-version="true" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CMCSPOE</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/CMCSPOE.styles.css" asp-append-version="true" />
 </head>
 <body>
-	<!-- NAVIGATION BAR -->
-	<nav class="navbar navbar-expand-lg navbar-custom">
-		<div class="container-fluid">
-			<a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">CMCSPOE</a>
+    <!-- NAVIGATION BAR -->
+    <nav class="navbar navbar-expand-lg navbar-custom" aria-label="Main navigation">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
+                <!-- small brand icon -->
+                <svg class="brand-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+                    <path d="M3 12l9-8 9 8v7a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-7z" fill="#ffd700"></path>
+                </svg>
+                <span class="ms-2">CMCSPOE</span>
+            </a>
 
-			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-				<span class="navbar-toggler-icon" style="filter: invert(1);"></span>
-			</button>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+            </button>
 
-			<div class="collapse navbar-collapse" id="navbarNav">
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- LEFT LINKS -->
+                <ul class="navbar-nav me-auto align-items-lg-center">
+                    <li class="nav-item">
+                        <a class="nav-link @IsActive("Home","Index")" asp-controller="Home" asp-action="Index" aria-current="@(IsActive("Home","Index") == "active" ? "page" : "")">
+                            <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 11.5L12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-8.5z"/></svg>
+                            <span class="nav-text">Home</span>
+                        </a>
+                    </li>
 
-				<!-- LEFT LINKS -->
-				<ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link @IsActive("Home","About")" asp-controller="Home" asp-action="About" aria-current="@(IsActive("Home","About") == "active" ? "page" : "")">
+                            <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M11 17h2v-6h-2v6zm0-8h2V7h-2v2zm1-7C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+                            <span class="nav-text">About</span>
+                        </a>
+                    </li>
 
-					<li class="nav-item">
-						<a class="nav-link" asp-controller="Home" asp-action="About">About</a>
-					</li>
+                    <li class="nav-item">
+                        <a class="nav-link @IsActive("Home","Privacy")" asp-controller="Home" asp-action="Privacy" aria-current="@(IsActive("Home","Privacy") == "active" ? "page" : "")">
+                            <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                            <span class="nav-text">Privacy</span>
+                        </a>
+                    </li>
 
-					<li class="nav-item">
-						<a class="nav-link" asp-controller="Home" asp-action="Privacy">Privacy</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" asp-controller="Home" asp-action="About">About</a>
-					</li>
-					@if (userName != null && userRole != null)
-					{
-						<li class="nav-item">
-							<a class="nav-link" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
-						</li>
-					}
+                    @if (userName != null && userRole != null)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link @IsActive("Dashboard","Index")" asp-controller="Dashboard" asp-action="Index" aria-current="@(IsActive("Dashboard","Index") == "active" ? "page" : "")">Dashboard</a>
+                        </li>
+                    }
+                </ul>
 
+                <!-- COMPACT ICON-ONLY TOOLBAR FOR QUICK ACTIONS (visible on medium+ screens) -->
+                @if (userName != null)
+                {
+                    <div class="d-none d-md-flex align-items-center me-2 icon-toolbar" role="toolbar" aria-label="Quick actions">
+                        <a class="btn btn-icon" asp-controller="Claim" asp-action="SubmitClaim" title="Submit Claim" aria-label="Submit Claim">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+                                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </a>
+                        <a class="btn btn-icon" asp-controller="Claim" asp-action="UploadDocuments" title="Upload Document" aria-label="Upload Document">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+                                <path d="M12 3v12M7 8l5-5 5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M5 21h14a1 1 0 0 0 1-1V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </a>
+                    </div>
+                }
 
-				</ul>
+                <!-- RIGHT SIDE (Login / user menu) -->
+                <ul class="navbar-nav">
+                    @if (userName != null)
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="me-2 username-display">@userName</span>
+                                @if (userRole != null)
+                                {
+                                    <span class="badge bg-warning text-dark" title="Role">@userRole</span>
+                                }
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">Profile</a></li>
+                                <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li><a class="dropdown-item" asp-controller="Claim" asp-action="SubmitClaim">Submit Claim</a></li>
+                                <li><a class="dropdown-item" asp-controller="Claim" asp-action="UploadDocuments">Upload Document</a></li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li><a class="dropdown-item" asp-controller="Account" asp-action="Logout">Logout</a></li>
+                            </ul>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
+                        </li>
 
-				<!-- RIGHT SIDE (Login status) -->
-				<ul class="navbar-nav">
-					@if (TempData["Username"] != null)
-					{
-						<li class="nav-item">
-							<span class="nav-link username-display">Welcome, @TempData["Username"]</span>
-						</li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Account" asp-action="Registration">Register</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </nav>
 
-						<li class="nav-item">
-							<a class="nav-link" asp-controller="Account" asp-action="Logout">Logout</a>
-						</li>
-					}
-					else
-					{
-						<li class="nav-item">
-							<a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
-						</li>
+    <!-- Optional contextual header area (improves discoverability / orientation) -->
+    <div class="container mt-3">
+        @if (userName != null)
+        {
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="mb-0">Hello, <span class="username-display">@userName</span></h5>
+                    @if (userRole != null)
+                    {
+                        <small class="text-muted">Role: @userRole</small>
+                    }
+                </div>
+                <div>
+                    <!-- on small screens the quick actions are accessible in the header (text buttons) -->
+                    <div class="d-flex d-md-none gap-2">
+                        <a class="btn btn-sm btn-primary" asp-controller="Claim" asp-action="SubmitClaim">Submit Claim</a>
+                        <a class="btn btn-sm btn-outline-secondary" asp-controller="Claim" asp-action="UploadDocuments">Upload</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
 
-						<li class="nav-item">
-							<a class="nav-link" asp-controller="Account" asp-action="Registration">Register</a>
-						</li>
-					}
-				</ul>
-			</div>
-		</div>
-	</nav>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
 
+    <footer class="text-center mt-5 mb-3">
+        <div class="container">
+            <span class="text-white">&copy; @DateTime.Now.Year - CMCSPOE System</span>
+        </div>
+    </footer>
 
-	<div class="container mt-4">
-		<main role="main" class="pb-3">
-			@RenderBody()
-		</main>
-	</div>
-
-	<footer class="text-center mt-5 mb-3">
-		<div class="container">
-			<span class="text-white">&copy;@DateTime.Now.Year - CMCSPOE System</span>
-		</div>
-	</footer>
-	<script src="~/lib/jquery/dist/jquery.min.js"></script>
-	<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-	<script src="~/js/site.js" asp-append-version="true"></script>
-	@await RenderSectionAsync("Scripts", required: false)
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

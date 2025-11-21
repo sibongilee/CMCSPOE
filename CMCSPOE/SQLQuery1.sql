@@ -119,15 +119,33 @@ GO
 
 -- Submit Claim
 CREATE PROCEDURE sp_SubmitClaim
-    @LecturerId INT,
+    @UserId INT,
     @HoursWorked DECIMAL(10,2),
-    @HourlyRate DECIMAL(10,2)
-AS
-BEGIN
-    INSERT INTO Claims (LecturerId, HoursWorked, HourlyRate, TotalAmount, DateSubmitted)
-    VALUES (@LecturerId, @HoursWorked, @HourlyRate, @HoursWorked * @HourlyRate, GETDATE());
-END
-GO
+    @HourlyRate DECIMAL(10,2),
+    @DocumentPath NVARCHAR(255),
+    @Notes NVARCHAR(500) = NULL
+    AS
+    BEGIN
+    DECLARE @LecturerId INT;
+    -- Get LecturerId from Users table
+    SELECT @LecturerId = LecturerId
+    FROM Lecturers
+    WHERE UserId = @UserId;
+    --IF Mising create lecturer automatically
+    IF(@LecturerId IS NULL)
+    BEGIN
+        INSERT INTO Lecturers (UserId, LecturerName, Email, Department)
+        SELECT UserId, FullName, Email,'Unknown'
+        FROM Users
+        WHERE UserId = @UserId;
+        SELECT @LecturerId = SCOPE_IDENTITY();
+    END
+    -- Insert new claim
+    INSERT INTO Claims (LecturerId, HoursWorked, HourlyRate, TotalAmount, DateSubmitted, DocumentPath, Notes, Status)
+    VALUES (@LecturerId, @HoursWorked, @HourlyRate, (@HoursWorked * @HourlyRate), GETDATE(), @DocumentPath, @Notes, 'Pending');
+    END
+    GO
+
 
 -- Approve Claim
 CREATE PROCEDURE sp_ApproveClaim
@@ -191,4 +209,10 @@ CREATE PROCEDURE sp_GetHrReport AS
 BEGIN
     SELECT * FROM vw_HrReport;
 END
+GO
+INSERT INTO Lecturers(UserId, LecturerName, Email, Department)
+SELECT UserId, FullName, Email,'Unknown'
+FROM Users
+WHERE UserId = @UserId AND UserId NOT IN (SELECT UserId FROM Lecturers);
+
 GO

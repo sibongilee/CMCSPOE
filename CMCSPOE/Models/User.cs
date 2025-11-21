@@ -9,14 +9,15 @@ namespace CMCSPOE.Models
         [Display(Name = "Full Name")]
         public string FullName { get; set; }
         [Required]
-        [EmailAddress]
+        [DataType(DataType.EmailAddress)]
         public string Email { get; set; }
         [Required]
         [DataType(DataType.Password)]
-        public string PasswordHash { get; set; } = string.Empty;
+        public string PasswordHash { get; set; } // In production, store hashed passwords only
+
         [Required]
         [Display(Name = "Role")]
-        public string Role { get; set; } // Lecturer, Programme Coordinator, Academic Manager
+        public string Role { get; set; } // Lecturer, Programme Coordinator, Academic Manager,HR
 
     }
 }

@@ -75,7 +75,10 @@ namespace CMCSPOE.Controllers
                     while (r.Read())
                     {
                         csv.AppendLine(
-                            $"{r["ClaimID"]},{r["FullName"]},{r["HoursWorked"]},{r["HourlyRate"]},{r["FinalAmount"]},{r["ApprovedDate"]}"
+                            $"{r["ClaimID"]}," +
+                            $"{r["FullName"]}" +
+                            $",{r["HoursWorked"]}," +
+                            $"{r["HourlyRate"]},{r["TotalAmount"]},{r["ApprovedDate"]}"
                         );
                     }
                 }

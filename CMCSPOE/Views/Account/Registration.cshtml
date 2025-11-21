@@ -16,13 +16,13 @@
             </div>
 
             <div class="mb-3">
-                <label asp-for="Email" class="form-label"></label>
+                <label asp-for="Email" class="form-label">Enter your email address</label>
                 <input asp-for="Email" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
-                <label asp-for="PasswordHash" class="form-label"></label>
+                <label asp-for="PasswordHash" class="form-label">Create a password</label>
                 <input asp-for="PasswordHash" class="form-control" type="password" />
                 <span asp-validation-for="PasswordHash" class="text-danger"></span>
             </div>
@@ -34,6 +34,7 @@
                     <option value="Lecturer">Lecturer</option>
                     <option value="Programme Coordinator">Programme Coordinator</option>
                     <option value="Academic Manager">Academic Manager</option>
+                    <option value="HR">HR</option>
                 </select>
                 <span asp-validation-for="Role" class="text-danger"></span>
             </div>

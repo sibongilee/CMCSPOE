@@ -35,19 +35,78 @@ namespace CMCSPOE.Controllers
         {
             try
             {
-                using (SqlConnection conn = db.GetConnection())
+                // 1) Get current logged-in user id from session
+                var loggedInUserId = HttpContext.Session.GetInt32("UserId");
+                if (loggedInUserId == null)
                 {
-                    conn.Open();
+                    TempData["Error"] = "You must be logged in to submit a claim.";
+                    return RedirectToAction("Login", "Account");
+                }
+
+                int lecturerId;
+
+                using (SqlConnection con = db.GetConnection())
+                {
+                    con.Open();
+
+                    // 2) Try find LecturerId for this user
+                    using (SqlCommand cmdFind = new SqlCommand(
+                        "SELECT TOP 1 LecturerId FROM Lecturers WHERE UserId = @UserId", con))
+                    {
+                        cmdFind.Parameters.AddWithValue("@UserId", loggedInUserId.Value);
+                        var obj = cmdFind.ExecuteScalar();
+                        if (obj != null && obj != DBNull.Value)
+                        {
+                            lecturerId = Convert.ToInt32(obj);
+                        }
+                        else
+                        {
+                            // 3) Lecturer entry not found -> create new Lecturer record using User info
+                            //    Fetch user fullname and email from Users table
+                            string userFullName = "";
+                            string userEmail = "";
+
+                            using (SqlCommand cmdUser = new SqlCommand(
+                                "SELECT FullName, Email FROM Users WHERE UserId = @UserId", con))
+                            {
+                                cmdUser.Parameters.AddWithValue("@UserId", loggedInUserId.Value);
+                                using (var reader = cmdUser.ExecuteReader())
+                                {
+                                    if (reader.Read())
+                                    {
+                                        userFullName = reader["FullName"]?.ToString() ?? "";
+                                        userEmail = reader["Email"]?.ToString() ?? "";
+                                    }
+                                }
+                            }
+
+                            // Insert new lecturer
+                            using (SqlCommand cmdInsertLect = new SqlCommand(
+                                "INSERT INTO Lecturers (UserId, LecturerName, Email, Department) " +
+                                "VALUES (@UserId, @LecturerName, @Email, @Department); SELECT SCOPE_IDENTITY();", con))
+                            {
+                                cmdInsertLect.Parameters.AddWithValue("@UserId", loggedInUserId.Value);
+                                cmdInsertLect.Parameters.AddWithValue("@LecturerName", string.IsNullOrWhiteSpace(userFullName) ? "Unknown Lecturer" : userFullName);
+                                cmdInsertLect.Parameters.AddWithValue("@Email", string.IsNullOrWhiteSpace(userEmail) ? (object)DBNull.Value : userEmail);
+                                cmdInsertLect.Parameters.AddWithValue("@Department", (object)DBNull.Value);
+
+                                var newIdObj = cmdInsertLect.ExecuteScalar();
+                                lecturerId = Convert.ToInt32(newIdObj);
+                            }
+                        }
+                    }
+
+                    // 4) Now insert the claim with the confirmed lecturerId
                     string sql = @"INSERT INTO Claims 
                     (LecturerId, HoursWorked, HourlyRate, Notes, Status, DateSubmitted)
                     VALUES (@LecturerId, @HoursWorked, @HourlyRate, @Notes, 'Pending', GETDATE())";
 
-                    using (SqlCommand cmd = new SqlCommand(sql, conn))
+                    using (SqlCommand cmd = new SqlCommand(sql, con))
                     {
-                        cmd.Parameters.AddWithValue("@LecturerId", claim.LecturerId);
+                        cmd.Parameters.AddWithValue("@LecturerId", lecturerId);
                         cmd.Parameters.AddWithValue("@HoursWorked", claim.HoursWorked);
                         cmd.Parameters.AddWithValue("@HourlyRate", claim.HourlyRate);
-                        cmd.Parameters.AddWithValue("@Notes", claim.Notes ?? "");
+                        cmd.Parameters.AddWithValue("@Notes", claim.Notes ?? (object)DBNull.Value);
 
                         cmd.ExecuteNonQuery();
                     }
@@ -59,7 +118,8 @@ namespace CMCSPOE.Controllers
             catch (Exception ex)
             {
                 TempData["Error"] = "Error submitting claim: " + ex.Message;
-                return View();
+                return View(claim);
+
             }
         }
 
