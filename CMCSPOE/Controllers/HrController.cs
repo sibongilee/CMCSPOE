@@ -35,7 +35,7 @@ namespace CMCSPOE.Controllers
                     ORDER BY c.ApprovedDate DESC";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
-                using (var reader = cmd.ExecuteReader())
+                using (SqlDataReader reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
                     {
