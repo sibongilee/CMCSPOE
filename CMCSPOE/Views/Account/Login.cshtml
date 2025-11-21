@@ -1,36 +1,42 @@
-﻿@model CMCSPOE.Models.User;
+﻿@model CMCSPOE.Models.User
 @{
-	ViewData["Title"] = "Login";
+    ViewData["Title"] = "Login";
 }
 
-<h2>Login</h2>
-<hr />
-
 <div class="d-flex justify-content-center">
-    <div class="login-card">
-        <form asp-action="Login" method="post" class="login-form">
+    <div class="login-card" role="region" aria-labelledby="login-title">
+        <h1 id="login-title" class="mb-1">Welcome back</h1>
+        <p class="form-hint">Sign in to your account</p>
+
+        <form asp-action="Login" method="post" class="login-form" novalidate>
+            <div asp-validation-summary="ModelOnly" class="text-danger error-message sr-only"></div>
+
             <div class="mb-3">
-                <label asp-for="Email" class="form-label">Enter your email address</label>
-                <input asp-for="Email" class="form-control" />
+                <label asp-for="Email" class="form-label">Email</label>
+                <input asp-for="Email" class="form-control" autocomplete="email" />
+                <div class="form-hint">We'll never share your email.</div>
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
-                <label asp-for="PasswordHash" class="form-label">Please enter your password</label>
-                <input asp-for="PasswordHash" class="form-control" type="password" />
-                <span asp-validation-for="PasswordHash" class="text-danger"></span>
+                <label asp-for="PasswordHash" class="form-label">Password</label>
+                <div class="input-group">
+                    <input asp-for="PasswordHash" class="form-control with-toggle" type="password" autocomplete="current-password" />
+                    <button type="button" class="password-toggle" aria-label="Show password" title="Show password">Show</button>
+                </div>
+                <span asp-validation-for="PasswordHash" class="text-danger mt-1"></span>
             </div>
 
-            <button type="submit" class="btn btn-login w-100">Login</button>
+            <button type="submit" class="btn btn-login w-100" aria-label="Login">Login</button>
 
             @if (ViewBag.Message != null)
             {
-                <div class="alert alert-danger mt-3">@ViewBag.Message</div>
+                <div class="alert alert-danger mt-3" role="alert">@ViewBag.Message</div>
             }
         </form>
 
         <div class="text-center mt-3 register-note">
-            <p>Don't have an account? 
+            <p class="mb-0">Don't have an account?
                 <a asp-controller="Account" asp-action="Registration">Register here</a>
             </p>
         </div>

@@ -169,6 +169,44 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        // Global password show/hide functionality for inputs inside .input-group
+        (function () {
+            function togglePassword(button) {
+                var group = button.closest('.input-group');
+                if (!group) return;
+                var input = group.querySelector('input[type="password"], input[type="text"]');
+                if (!input) return;
+
+                var isPassword = input.getAttribute('type') === 'password';
+                input.setAttribute('type', isPassword ? 'text' : 'password');
+                // Update accessible label and visible text
+                var labelText = isPassword ? 'Hide password' : 'Show password';
+                button.setAttribute('aria-label', labelText);
+                button.textContent = isPassword ? 'Hide' : 'Show';
+                button.setAttribute('title', labelText);
+            }
+
+            document.addEventListener('click', function (e) {
+                var btn = e.target.closest && e.target.closest('.password-toggle');
+                if (btn) {
+                    e.preventDefault();
+                    togglePassword(btn);
+                }
+            });
+
+            // enable toggles added dynamically
+            document.addEventListener('keydown', function (e) {
+                // allow Enter/Space to activate focused toggle button
+                if ((e.key === 'Enter' || e.key === ' ') && document.activeElement && document.activeElement.classList.contains('password-toggle')) {
+                    e.preventDefault();
+                    togglePassword(document.activeElement);
+                }
+            });
+        })();
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -389,47 +389,360 @@ body.login-page {
     padding: 0;
 }
 
+/* Enhanced login card */
 .login-card {
-    background: #1a1f2b;
-    width: 420px;
-    max-width: 90%;
-    padding: 35px 30px;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    background: linear-gradient(180deg, #151925 0%, #0f141a 100%); /* slightly richer */
+    width: 460px;
+    max-width: 94%;
+    padding: 38px 34px;
+    border-radius: 14px;
+    box-shadow: 0 12px 34px rgba(2,6,23,0.6);
+    border: 1px solid rgba(255,255,255,0.04);
+    transition: transform .12s ease, box-shadow .14s ease;
+    transform-origin: center top;
+    animation: card-entrance .28s ease both;
 }
 
-    .login-card h1 {
-        color: #fff;
+/* subtle lift on hover (desktop) */
+@media (hover: hover) {
+    .login-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 20px 48px rgba(2,6,23,0.65);
     }
+}
 
-    .login-card p {
-        color: #bbb;
-    }
+@keyframes card-entrance {
+    from { opacity: 0; transform: translateY(8px) scale(.995); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.login-card h1 {
+    color: #ffffff;
+    font-size: 1.6rem;
+    margin: 0 0 10px 0;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.login-card p {
+    color: #c7cbd1;
+    margin: 0 0 18px 0;
+    font-size: 0.98rem;
+}
+
+/* Form readability and usability */
+.login-form {
+    display: block;
+    gap: 12px;
+}
 
 .login-form label {
-    color: #ccc;
+    display: block;
+    color: #d1d6dc;
+    font-size: 0.95rem;
+    margin: 8px 0 6px 0;
+    font-weight: 600;
 }
 
+/* inputs and selects */
 .login-form input,
-.login-form select {
-    background: #10141e;
-    border: 1px solid #333;
-    color: #eee;
+.login-form select,
+.login-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #2b323b;
+    background: #0f141a;
+    color: #f3f6f9;
+    font-size: 1rem;
+    transition: border-color .12s ease, box-shadow .12s ease, background .12s ease;
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
 }
 
-    .login-form input:focus {
-        border-color: #1abc9c;
-    }
+/* Improvements for login / registration inputs and password toggle alignment */
 
+/* stronger specificity so Bootstrap .form-control doesn't override colors */
+.login-form .form-control,
+.login-form .form-select,
+.login-form textarea {
+    background: #0f141a;
+    color: #f3f6f9;
+    border: 1px solid #2b323b;
+    padding: 12px 14px;
+    border-radius: 10px;
+    box-sizing: border-box;
+}
+
+/* placeholder color */
+.login-form .form-control::placeholder,
+.login-form .form-select::placeholder {
+    color: #99a3af;
+    opacity: 1;
+}
+
+/* ensure inputs have room for the password toggle */
+.login-form .form-control.with-toggle {
+    padding-right: 48px;
+}
+
+/* input-group should be a positioning wrapper only (not horizontal flex) */
+.input-group {
+    position: relative;
+    display: block; /* stack label above control by default */
+}
+
+/* password toggle positioning adjusted to avoid overlap */
+.password-toggle {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #aeb8c6;
+    padding: 6px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+}
+
+/* keep accessible focus */
+.password-toggle:focus {
+    box-shadow: 0 0 0 4px rgba(26,188,156,0.12);
+    outline: none;
+}
+
+/* visual grouping for inputs with appended controls (like password toggle) */
+.input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* password toggle (JS can insert a button with this class) */
+.password-toggle {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #aeb8c6;
+    padding: 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+}
+.password-toggle:focus {
+    box-shadow: 0 0 0 4px rgba(26,188,156,0.12);
+    outline: none;
+}
+
+/* Focus state for keyboard users */
+.login-form input:focus,
+.login-form select:focus,
+.login-form textarea:focus {
+    border-color: #1abc9c;
+    box-shadow: 0 6px 18px rgba(26,188,156,0.08);
+}
+
+/* helper text and validation */
+.form-hint {
+    font-size: 0.85rem;
+    color: #99a3af;
+    margin-top: 6px;
+}
+
+/* error state for invalid inputs */
+.input-error {
+    border-color: #cc4444 !important;
+    background: rgba(204,68,68,0.02);
+}
+.error-message {
+    color: #ffcccc;
+    background: rgba(204,68,68,0.08);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    margin-top: 8px;
+}
+
+/* Primary login button - full width and accessible */
 .btn-login {
-    background: #1abc9c;
+    display: inline-block;
+    width: 100%;
+    padding: 12px 16px;
+    margin-top: 14px;
+    border-radius: 12px;
+    background: linear-gradient(180deg,#1abc9c 0%, #16a085 100%);
+    color: #072018;
+    font-weight: 700;
+    font-size: 1rem;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(16,115,95,0.18);
+    transition: transform .08s ease, box-shadow .12s ease, opacity .10s ease;
+    text-decoration: none;
 }
 
-    .btn-login:hover {
-        background: #16a085;
-    }
+/* button states */
+.btn-login:hover {
+    transform: translateY(-2px);
+}
+.btn-login:active {
+    transform: translateY(0);
+    box-shadow: 0 6px 16px rgba(16,115,95,0.14);
+}
+.btn-login:focus {
+    outline: none;
+    box-shadow: 0 0 0 6px rgba(26,188,156,0.12);
+}
+
+/* small print links under the form */
+.extra-links,
+.register-note {
+    margin-top: 12px;
+    text-align: center;
+    font-size: 0.92rem;
+}
 
 .extra-links a,
 .register-note a {
     color: #1abc9c;
+    text-decoration: none;
+    font-weight: 600;
+}
+.extra-links a:hover,
+.register-note a:hover {
+    text-decoration: underline;
+}
+
+/* Accessibility utility - visually hidden but available to screen readers */
+.sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0,0,0,0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* Responsive tweaks */
+@media (max-width: 540px) {
+    .login-card {
+        padding: 28px 20px;
+        width: 100%;
+        border-radius: 12px;
+    }
+    .login-card h1 {
+        font-size: 1.4rem;
+    }
+    .btn-login {
+        padding: 12px;
+        font-size: 1rem;
+    }
+}
+
+/* Keep original color for extra-link reuse */
+.extra-links a,
+.register-note a {
+    color: #1abc9c;
+}
+
+/* ===== Light form theme overrides (login / registration) =====
+   Placed at end of file to override earlier dark rules.
+*/
+
+/* Use page background (same as body) for login pages */
+body.login-page {
+    background: #f8fafc; /* match site body */
+}
+
+/* Card: white background, subtle border/shadow */
+.login-card {
+    background-color: #ffffff !important;
+    color: #222;
+    border: 1px solid #e6eef8;
+    box-shadow: 0 6px 18px rgba(3,9,20,0.06);
+}
+
+/* Headings and helper text on light card */
+.login-card h1 {
+    color: #003366;
+}
+.login-card p,
+.login-card .form-hint {
+    color: #444;
+}
+
+/* Inputs: light background, dark text, consistent with site forms */
+.login-form .form-control,
+.login-form .form-select,
+.login-form textarea {
+    background: #ffffff !important;
+    color: #222 !important;
+    border: 1px solid #cdd2d8 !important;
+    box-shadow: none !important;
+}
+
+/* Placeholder contrast */
+.login-form .form-control::placeholder,
+.login-form .form-select::placeholder {
+    color: #6b7280;
+    opacity: 1;
+}
+
+/* Focus state (visible and consistent with site) */
+.login-form input:focus,
+.login-form select:focus,
+.login-form textarea:focus {
+    border-color: #003366;
+    box-shadow: 0 6px 18px rgba(0,51,102,0.06);
+}
+
+/* Keep space for password toggle */
+.login-form .form-control.with-toggle {
+    padding-right: 48px;
+}
+
+/* Password toggle styling adjusted for light background */
+.password-toggle {
+    color: #374151;
+    background: transparent;
+}
+.password-toggle:focus {
+    box-shadow: 0 0 0 4px rgba(0,51,102,0.08);
+    outline: none;
+}
+
+/* Make primary button visible on white card */
+.btn-login {
+    background: linear-gradient(180deg,#007bff 0%, #0056b3 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 8px 20px rgba(3,27,78,0.08);
+}
+
+/* Alerts on the card use softer tones */
+.login-card .alert {
+    background-color: #fff7ed;
+    border-color: #ffe6c7;
+    color: #663c00;
+}
+
+/* Ensure links remain visible */
+.login-card a {
+    color: #1d4ed8;
 }
